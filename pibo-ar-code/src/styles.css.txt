@@ -1,0 +1,46 @@
+:root {
+  --pibo-orange: #ff7a1a;
+  --pibo-dark: #141414;
+  --pibo-light: #ffffff;
+}
+
+body {
+  margin: 0;
+  background: var(--pibo-dark);
+  color: var(--pibo-light);
+  font-family: sans-serif;
+}
+
+.section {
+  padding: 80px 10vw;
+}
+
+.section-light {
+  background: var(--pibo-light);
+  color: var(--pibo-dark);
+}
+
+.section-dark {
+  background: #050505;
+  color: var(--pibo-light);
+}
+
+.pibo-button {
+  background: var(--pibo-orange);
+  color: #fff;
+  padding: 12px 24px;
+  border-radius: 999px;
+  border: none;
+  cursor: pointer;
+}
+
+[data-animate] {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: 0.7s ease;
+}
+
+.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}

@@ -1,0 +1,10 @@
+import React from "react";
+
+export default function AdminPanel() {
+  return (
+    <div>
+      <h2>پنل مدیریت</h2>
+      <p>QRها و اطلاعات جانبی اینجا قرار می‌گیرند.</p>
+    </div>
+  );
+}

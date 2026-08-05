@@ -1,0 +1,13 @@
+import React, { useState } from "react";
+
+export default function AdminLogin({ onLogin }) {
+  const [password, setPassword] = useState("");
+
+  return (
+    <div>
+      <h2>ورود مدیریت</h2>
+      <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+      <button className="pibo-button" onClick={() => onLogin(password)}>ورود</button>
+    </div>
+  );
+}
