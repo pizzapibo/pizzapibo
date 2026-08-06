@@ -58,15 +58,6 @@
 <script src="js/products.js"></script>
 <script>
   (async () => {
-    async function pibo_fileExists(url){
-      try{
-        const res = await fetch(url, { method: "GET", cache: "no-store" });
-        return res.ok;
-      }catch(e){
-        return false;
-      }
-    }
-
     const params = new URLSearchParams(location.search);
     const pizzaId = params.get("pizza");
     const viewer = document.getElementById("viewer");
@@ -75,38 +66,61 @@
     const fallbackText = document.getElementById("fallback-text");
     const nameEl = document.getElementById("pizza-name");
 
-    if(!pibo_db){
-      nameEl.textContent = "اتصال برقرار نیست";
-      fallback.classList.add("show");
-      fallbackTitle.textContent = "اتصال به پایگاه‌داده برقرار نشد";
-      fallbackText.textContent = "مقادیر js/firebase-config.js را طبق راهنمای README تکمیل کنید.";
-      return;
+    // show something immediately — a screenshot taken at any point should
+    // never be a truly blank page again.
+    fallback.classList.add("show");
+    fallbackTitle.textContent = "در حال بررسی…";
+    fallbackText.textContent = "";
+
+    async function pibo_fileExists(url){
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      try{
+        const res = await fetch(url, { method: "GET", cache: "no-store", signal: controller.signal });
+        return res.ok;
+      }catch(e){
+        return false;
+      }finally{
+        clearTimeout(timer);
+      }
     }
 
-    // safety net: if the model-viewer library itself fails to load (bad CDN
-    // link, network block, etc.) nothing renders and no "error" event fires —
-    // catch that case explicitly instead of leaving a blank screen.
-    const libraryReady = Promise.race([
-      customElements.whenDefined("model-viewer"),
-      new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 6000))
-    ]);
-
-    let product = null;
     try{
-      [, product] = await Promise.all([
-        libraryReady,
-        pizzaId ? pibo_getProduct(pizzaId) : Promise.resolve(null)
-      ]);
-    }catch(e){
-      fallback.classList.add("show");
-      fallbackTitle.textContent = "کتابخانه نمایش سه‌بعدی بارگذاری نشد";
-      fallbackText.textContent = "اتصال اینترنت را بررسی کنید و صفحه را رفرش کنید. اگر باز هم کار نکرد، شاید دامنه‌های گوگل/CDN روی این شبکه فیلتر شده باشند.";
-      nameEl.textContent = pizzaId || "";
-      return;
-    }
+      if(!pibo_db){
+        nameEl.textContent = "اتصال برقرار نیست";
+        fallbackTitle.textContent = "اتصال به پایگاه‌داده برقرار نشد";
+        fallbackText.textContent = "مقادیر js/firebase-config.js را طبق راهنمای README تکمیل کنید.";
+        return;
+      }
 
-    if(product){
+      fallbackTitle.textContent = "در حال بارگذاری کتابخانه سه‌بعدی…";
+      const libraryReady = Promise.race([
+        customElements.whenDefined("model-viewer"),
+        new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 8000))
+      ]);
+
+      let product = null;
+      try{
+        [, product] = await Promise.all([
+          libraryReady,
+          pizzaId ? pibo_getProduct(pizzaId) : Promise.resolve(null)
+        ]);
+      }catch(e){
+        fallbackTitle.textContent = "کتابخانه نمایش سه‌بعدی بارگذاری نشد";
+        fallbackText.textContent = "اتصال اینترنت را بررسی کنید و صفحه را رفرش کنید. اگر باز هم کار نکرد، شاید دامنه‌های گوگل/CDN روی این شبکه فیلتر شده باشند.";
+        nameEl.textContent = pizzaId || "";
+        return;
+      }
+
+      if(!product){
+        nameEl.textContent = "پیتزا یافت نشد";
+        fallbackTitle.textContent = "این پیتزا پیدا نشد";
+        fallbackText.textContent = "ممکن است حذف شده باشد یا لینک اشتباه باشد.";
+        return;
+      }
+
       nameEl.textContent = product.name;
+      fallbackTitle.textContent = "در حال بررسی فایل مدل سه‌بعدی…";
 
       const base = location.href.replace(/ar\.html.*$/, "");
       const glbUrl = base + product.glb;
@@ -116,15 +130,15 @@
       const usdzOk = usdzUrl ? await pibo_fileExists(usdzUrl) : false;
 
       if(!glbOk){
-        fallback.classList.add("show");
         fallbackTitle.textContent = "فایل مدل سه‌بعدی (GLB) پیدا نشد";
-        fallbackText.innerHTML = `این آدرس روی سرور پیدا نشد (۴۰۴):<br><code style="word-break:break-all">${glbUrl}</code><br><br>فایل را داخل پوشه <code>models</code> با همین نام دقیق (حروف بزرگ/کوچک هم مهم است) قرار دهید و دوباره Push کنید.`;
+        fallbackText.innerHTML = `این آدرس روی سرور پیدا یا در ۸ ثانیه لود نشد:<br><code style="word-break:break-all">${glbUrl}</code><br><br>فایل را داخل پوشه <code>models</code> با همین نام دقیق (حروف بزرگ/کوچک هم مهم است) قرار دهید و دوباره Push کنید.`;
         return;
       }
 
       viewer.setAttribute("src", product.glb);
       if(usdzOk) viewer.setAttribute("ios-src", product.usdz);
       viewer.style.display = "block";
+      fallback.classList.remove("show");
 
       if(!usdzOk){
         const warn = document.createElement("div");
@@ -139,11 +153,11 @@
         fallbackTitle.textContent = "فایل مدل سه‌بعدی نامعتبر است";
         fallbackText.textContent = "فایل پیدا شد ولی به‌عنوان مدل سه‌بعدی معتبر (GLB) قابل خواندن نبود. خروجی Luma AI را دوباره بررسی کنید.";
       });
-    }else{
-      nameEl.textContent = "پیتزا یافت نشد";
+    }catch(err){
+      // absolute last resort: show the raw error so nothing stays invisible
       fallback.classList.add("show");
-      fallbackTitle.textContent = "این پیتزا پیدا نشد";
-      fallbackText.textContent = "ممکن است حذف شده باشد یا لینک اشتباه باشد.";
+      fallbackTitle.textContent = "خطای غیرمنتظره";
+      fallbackText.textContent = (err && err.message) ? err.message : String(err);
     }
   })();
 </script>
