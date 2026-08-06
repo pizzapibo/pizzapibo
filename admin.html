@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>پنل مدیریت | پیبو</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-screen">
+  <div class="auth-card">
+    <div class="mark" style="border-radius:16px;width:56px;height:56px;display:flex;align-items:center;justify-content:center;font-size:1.4rem">پ</div>
+    <h1>پنل مدیریت پیبو</h1>
+    <p>برای ورود، رمز عبور را وارد کنید</p>
+    <form data-auth-form>
+      <div class="field">
+        <input type="password" name="password" placeholder="رمز عبور" autocomplete="off" required>
+      </div>
+      <div class="auth-error" data-auth-error></div>
+      <button type="submit" class="btn btn-primary">ورود</button>
+    </form>
+  </div>
+</div>
+
+<div class="admin-shell">
+  <div class="admin-top">
+    <div class="container">
+      <span class="logo"><span class="mark">پ</span> پنل پیبو</span>
+      <button class="btn btn-outline" data-logout>خروج</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+    <div class="container">
+
+      <div class="admin-panel">
+        <h2>مدیریت منو</h2>
+        <p class="sub">افزودن، ویرایش و حذف پیتزا، نوشیدنی، سیب‌زمینی و دسر — تغییرات فوراً روی سایت اعمال می‌شود.</p>
+
+        <form data-product-form class="order-form" style="margin-bottom:30px">
+          <h3 data-product-form-title style="font-size:1.05rem;font-weight:900;margin-bottom:16px">افزودن مورد جدید</h3>
+          <div class="grid-2">
+            <div class="field">
+              <label for="p-name">نام</label>
+              <input id="p-name" name="name" type="text" placeholder="مثلاً مارگاریتا" required>
+            </div>
+            <div class="field">
+              <label for="p-category">دسته‌بندی</label>
+              <select id="p-category" name="category" required>
+                <option value="پیتزا">پیتزا</option>
+                <option value="نوشیدنی">نوشیدنی</option>
+                <option value="سیب‌زمینی">سیب‌زمینی</option>
+                <option value="دسر">دسر</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="p-price">قیمت (تومان)</label>
+              <input id="p-price" name="price" type="number" min="0" step="1000" placeholder="185000" required>
+            </div>
+            <div class="field">
+              <label for="p-emoji">آیکون</label>
+              <input id="p-emoji" name="emoji" type="text" placeholder="🍕" maxlength="4">
+            </div>
+          </div>
+          <div class="field">
+            <label for="p-desc">توضیحات</label>
+            <textarea id="p-desc" name="desc" placeholder="مواد اولیه و توضیح کوتاه"></textarea>
+          </div>
+          <div class="grid-2">
+            <div class="field">
+              <label for="p-glb">فایل GLB (اختیاری — فقط برای پیتزا با AR)</label>
+              <input id="p-glb" name="glb" type="text" placeholder="models/margherita.glb">
+            </div>
+            <div class="field">
+              <label for="p-usdz">فایل USDZ (اختیاری — فقط برای پیتزا با AR)</label>
+              <input id="p-usdz" name="usdz" type="text" placeholder="models/margherita.usdz">
+            </div>
+          </div>
+          <div style="display:flex;gap:12px">
+            <button type="submit" class="btn btn-primary">ذخیره</button>
+            <button type="button" class="btn btn-outline" data-product-cancel hidden>لغو ویرایش</button>
+          </div>
+        </form>
+
+        <table class="orders-table" style="margin-bottom:14px">
+          <thead>
+            <tr><th>نام</th><th>دسته</th><th>قیمت</th><th>عملیات</th></tr>
+          </thead>
+          <tbody data-products-body></tbody>
+        </table>
+      </div>
+
+      <div class="admin-panel">
+        <h2>کد QR هر پیتزا</h2>
+        <p class="sub">این کدها را کنار هر پیتزا در منوی فیزیکی یا میز مشتری قرار دهید تا مستقیم به مشاهده سه‌بعدی همان پیتزا برسند.</p>
+        <div class="qr-grid" data-qr-grid></div>
+      </div>
+
+      <div class="admin-panel">
+        <h2>سفارش‌های اخیر</h2>
+        <p class="sub">همه سفارش‌هایی که مشتری‌ها از هر مرورگر یا دستگاهی ثبت کرده‌اند، اینجا نمایش داده می‌شود.</p>
+        <table class="orders-table">
+          <thead>
+            <tr><th>نام</th><th>تماس</th><th>سفارش</th><th>مبلغ</th><th>تاریخ</th></tr>
+          </thead>
+          <tbody data-orders-body></tbody>
+        </table>
+        <div class="orders-empty" data-orders-empty>هنوز سفارشی ثبت نشده است.</div>
+      </div>
+
+      <div class="admin-panel">
+        <h2>راهنمای اتصال مدل سه‌بعدی</h2>
+        <p class="sub">
+          ۱. پیتزا را در Luma AI اسکن کرده و خروجی GLB و USDZ بگیرید.<br>
+          ۲. فایل‌ها را داخل پوشه <code>models</code> پروژه قرار دهید.<br>
+          ۳. هنگام افزودن یا ویرایش پیتزا در همین پنل، نام فایل‌های glb و usdz را وارد کنید.<br>
+          ۴. پروژه را روی گیت‌هاب Push کنید — GitHub Pages به‌صورت خودکار سایت را به‌روزرسانی می‌کند.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/products.js"></script>
+<script src="js/auth.js"></script>
+</body>
+</html>
