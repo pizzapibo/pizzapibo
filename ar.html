@@ -60,6 +60,8 @@
   (async () => {
     const params = new URLSearchParams(location.search);
     const pizzaId = params.get("pizza");
+    const directSrc = params.get("src");
+    const directIosSrc = params.get("ios-src");
     const viewer = document.getElementById("viewer");
     const fallback = document.getElementById("fallback");
     const fallbackTitle = document.getElementById("fallback-title");
@@ -86,6 +88,37 @@
     }
 
     try{
+      // direct test mode: ?src=<url>&ios-src=<url> bypasses Firebase/product
+      // lookup entirely — used to check whether ANY model loads on this
+      // device/network, isolating the site setup from one specific file.
+      if(directSrc){
+        nameEl.textContent = "تست مستقیم مدل";
+        fallbackTitle.textContent = "در حال بارگذاری کتابخانه سه‌بعدی…";
+        await Promise.race([
+          customElements.whenDefined("model-viewer"),
+          new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), 8000))
+        ]).catch(() => {});
+
+        fallbackTitle.textContent = "در حال رندر مدل سه‌بعدی…";
+        viewer.setAttribute("src", directSrc);
+        if(directIosSrc) viewer.setAttribute("ios-src", directIosSrc);
+        viewer.style.display = "block";
+
+        const ok = await Promise.race([
+          new Promise(res => viewer.addEventListener("load", () => res(true), { once: true })),
+          new Promise(res => viewer.addEventListener("error", () => res(false), { once: true })),
+          new Promise(res => setTimeout(() => res(false), 10000))
+        ]);
+
+        if(ok){
+          fallback.classList.remove("show");
+        }else{
+          fallbackTitle.textContent = "مدل تست هم رندر نشد";
+          fallbackText.textContent = "یعنی مشکل از فایل پیتزای تو نیست — خود کتابخانه‌ی سه‌بعدی یا منابعش روی این شبکه/مرورگر کار نمی‌کنه.";
+        }
+        return;
+      }
+
       if(!pibo_db){
         nameEl.textContent = "اتصال برقرار نیست";
         fallbackTitle.textContent = "اتصال به پایگاه‌داده برقرار نشد";
