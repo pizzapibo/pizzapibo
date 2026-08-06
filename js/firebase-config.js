@@ -23,14 +23,16 @@
    و در پنل پیام خطای اتصال می‌بینید — چون هیچ داده پیش‌فرضی در پروژه
    ذخیره نشده است.
 =========================================================== */
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyABWtZFepD4wLmbx1EhcVENfwDiOygSBSg",
   authDomain: "pibo-c87f1.firebaseapp.com",
-  databaseURL: "https://pibo-c87f1-default-rtdb.firebaseio.com",
+  databaseURL: "https://pibo-c87f1-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "pibo-c87f1",
   storageBucket: "pibo-c87f1.firebasestorage.app",
   messagingSenderId: "1000692640688",
-  appId: "1:1000692640688:web:abe607c570bb48ac3b0475"
+  appId: "1:1000692640688:web:abe607c570bb48ac3b0475",
+  measurementId: "G-NTRQRW9LZN"
 };
 
 let pibo_db = null;
