@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pibo | پیتزا پیبو - تجربه‌ای متفاوت با واقعیت افزوده</title>
+    <meta name="description" content="پیتزا پیبو - سفارش آنلاین پیتزا با امکان مشاهده سه‌بعدی و واقعیت افزوده">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+
+    <!-- Model Viewer for AR -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+    <!-- Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="preloader-content">
+            <div class="pizza-loader"></div>
+            <p style="margin-top: 20px; font-weight: 700; color: #FF6B35;">در حال بارگذاری پیبو...</p>
+        </div>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="logo">
+            <div class="logo-icon">🍕</div>
+            Pibo
+        </a>
+        <ul class="nav-links">
+            <li><a href="#home">صفحه اصلی</a></li>
+            <li><a href="#menu">منو</a></li>
+            <li><a href="#features">ویژگی‌ها</a></li>
+            <li><a href="#order">سفارش</a></li>
+            <li><a href="#contact">تماس</a></li>
+        </ul>
+        <div class="nav-actions">
+            <button class="cart-btn" title="سبد خرید">
+                🛒
+                <span class="cart-count" style="display: none;">0</span>
+            </button>
+            <a href="admin.html" class="btn btn-primary">ورود ادمین</a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="hero-bg-shape"></div>
+        <div class="hero-bg-shape"></div>
+
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span>✨</span>
+                <span>تجربه واقعیت افزوده</span>
+            </div>
+            <h1 class="hero-title">
+                طعم <span>پیتزا</span> را قبل از خرید ببینید!
+            </h1>
+            <p class="hero-desc">
+                با پیبو، پیتزای مورد علاقه‌تان را در خانه خود به صورت سه‌بعدی ببینید، 
+                اندازه واقعی آن را بررسی کنید و سپس سفارش دهید. تجربه‌ای متفاوت از سفارش غذا!
+            </p>
+            <div class="hero-buttons">
+                <a href="#menu" class="btn btn-primary">
+                    🍕 مشاهده منو
+                </a>
+                <a href="#order" class="btn btn-outline">
+                    📋 ثبت سفارش
+                </a>
+            </div>
+        </div>
+
+        <div class="hero-image">
+            <div class="hero-pizza-container">
+                <img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=600" 
+                     alt="Pibo Pizza" class="hero-pizza">
+                <div class="floating-element" style="font-size: 3rem;">🍅</div>
+                <div class="floating-element" style="font-size: 2.5rem;">🧀</div>
+                <div class="floating-element" style="font-size: 2rem;">🌿</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="section categories-section" id="categories">
+        <div class="section-header reveal">
+            <span class="section-label">دسته‌بندی‌ها</span>
+            <h2 class="section-title">منوی متنوع پیبو</h2>
+            <p class="section-desc">از پیتزای کلاسیک تا دسرهای خوشمزه، همه چیز اینجاست</p>
+        </div>
+        <div class="categories-grid">
+            <!-- Categories will be loaded dynamically -->
+        </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="section" id="menu">
+        <div class="section-header reveal">
+            <span class="section-label">منو</span>
+            <h2 class="section-title">محصولات ما</h2>
+            <p class="section-desc">با کیفیت‌ترین مواد اولیه در پیتزای شما</p>
+        </div>
+        <div class="products-grid">
+            <!-- Products will be loaded dynamically -->
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="section features-section" id="features">
+        <div class="section-header reveal">
+            <span class="section-label" style="background: rgba(255,255,255,0.1); color: white;">چرا پیبو؟</span>
+            <h2 class="section-title">ویژگی‌های منحصر به فرد</h2>
+            <p class="section-desc" style="color: rgba(255,255,255,0.8);">تجربه‌ای متفاوت از سفارش آنلاین غذا</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card reveal">
+                <div class="feature-icon">🥽</div>
+                <h3 class="feature-title">واقعیت افزوده</h3>
+                <p class="feature-desc">پیتزا را قبل از خرید در فضای خانه خود به صورت سه‌بعدی ببینید و اندازه واقعی آن را بررسی کنید</p>
+            </div>
+            <div class="feature-card reveal" style="transition-delay: 0.1s">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">تحویل سریع</h3>
+                <p class="feature-desc">سفارش شما در کمترین زمان ممکن با بهترین کیفیت به دستتان می‌رسد</p>
+            </div>
+            <div class="feature-card reveal" style="transition-delay: 0.2s">
+                <div class="feature-icon">🍃</div>
+                <h3 class="feature-title">مواد تازه</h3>
+                <p class="feature-desc">از بهترین و تازه‌ترین مواد اولیه برای تهیه پیتزاهای خود استفاده می‌کنیم</p>
+            </div>
+            <div class="feature-card reveal" style="transition-delay: 0.3s">
+                <div class="feature-icon">📱</div>
+                <h3 class="feature-title">سفارش آسان</h3>
+                <p class="feature-desc">با چند کلیک ساده سفارش خود را ثبت کنید و از طریق واتس‌اپ یا تلگرام پیگیری کنید</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Order Section -->
+    <section class="section order-section" id="order">
+        <div class="section-header reveal">
+            <span class="section-label">سبد خرید</span>
+            <h2 class="section-title">ثبت سفارش</h2>
+            <p class="section-desc">محصولات انتخابی خود را نهایی کنید</p>
+        </div>
+        <div class="order-container reveal">
+            <div class="order-items">
+                <p style="text-align: center; color: #888;">سبد خرید خالی است</p>
+            </div>
+            <form id="order-form">
+                <div class="form-group">
+                    <label class="form-label">نام و نام خانوادگی *</label>
+                    <input type="text" class="form-input" id="order-name" required placeholder="نام خود را وارد کنید">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">شماره تماس *</label>
+                    <input type="tel" class="form-input" id="order-phone" required placeholder="مثلاً 09140909878">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">آدرس تحویل *</label>
+                    <textarea class="form-textarea" id="order-address" required placeholder="آدرس کامل خود را وارد کنید"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">توضیحات اضافی</label>
+                    <textarea class="form-textarea" id="order-notes" placeholder="هرگونه توضیحات خاص (اختیاری)"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; justify-content: center; padding: 18px;">
+                    ✅ ثبت نهایی سفارش
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section class="section contact-section" id="contact">
+        <div class="section-header reveal">
+            <span class="section-label">تماس با ما</span>
+            <h2 class="section-title">راه‌های ارتباطی</h2>
+            <p class="section-desc">از هر طریقی که راحت‌ترید با ما در تماس باشید</p>
+        </div>
+        <div class="contact-grid">
+            <a href="https://wa.me/989140909878" target="_blank" class="contact-card reveal">
+                <div class="contact-icon whatsapp">💬</div>
+                <h3 class="contact-title">واتس‌اپ</h3>
+                <p class="contact-info contact-whatsapp">09140909878</p>
+            </a>
+            <a href="https://t.me/+989140909878" target="_blank" class="contact-card reveal" style="transition-delay: 0.1s">
+                <div class="contact-icon telegram">✈️</div>
+                <h3 class="contact-title">تلگرام</h3>
+                <p class="contact-info contact-telegram">09140909878</p>
+            </a>
+            <a href="tel:09140909878" class="contact-card reveal" style="transition-delay: 0.2s">
+                <div class="contact-icon phone">📞</div>
+                <h3 class="contact-title">تماس تلفنی</h3>
+                <p class="contact-info contact-phone-number">09140909878</p>
+            </a>
+        </div>
+    </section>
+
+    <!-- QR Section -->
+    <section class="section qr-section" id="qr">
+        <div class="section-header reveal">
+            <span class="section-label">اسکن کنید</span>
+            <h2 class="section-title">کد QR پیبو</h2>
+            <p class="section-desc">با اسکن کد QR به راحتی به منوی ما دسترسی پیدا کنید</p>
+        </div>
+        <div class="qr-container reveal">
+            <div class="qr-code" id="qr-display">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://pibo-c87f1.web.app" 
+                     alt="Pibo QR Code" id="qr-image">
+            </div>
+            <p style="color: #888; margin-top: 20px;">این کد را اسکن کنید تا مستقیماً وارد منوی پیبو شوید</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-grid">
+            <div class="footer-brand">
+                <a href="#" class="logo">
+                    <div class="logo-icon">🍕</div>
+                    Pibo
+                </a>
+                <p class="footer-desc">
+                    پیتزا پیبو با افتخار از بهترین مواد اولیه برای تهیه لذیذترین پیتزاها استفاده می‌کند. 
+                    تجربه‌ای متفاوت با واقعیت افزوده!
+                </p>
+            </div>
+            <div>
+                <h4 class="footer-title">دسترسی سریع</h4>
+                <ul class="footer-links">
+                    <li><a href="#home">صفحه اصلی</a></li>
+                    <li><a href="#menu">منو</a></li>
+                    <li><a href="#order">ثبت سفارش</a></li>
+                    <li><a href="#contact">تماس با ما</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">دسته‌بندی‌ها</h4>
+                <ul class="footer-links">
+                    <li><a href="#menu">🍕 پیتزا</a></li>
+                    <li><a href="#menu">🍟 سیب‌زمینی</a></li>
+                    <li><a href="#menu">🥤 نوشیدنی</a></li>
+                    <li><a href="#menu">🍰 دسر</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="footer-title">تماس</h4>
+                <ul class="footer-links">
+                    <li><a href="tel:09140909878">📞 09140909878</a></li>
+                    <li><a href="https://wa.me/989140909878" target="_blank">💬 واتس‌اپ</a></li>
+                    <li><a href="https://t.me/+989140909878" target="_blank">✈️ تلگرام</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>© 2026 Pibo Pizza. تمامی حقوق محفوظ است.</p>
+        </div>
+    </footer>
+
+    <!-- Cart Sidebar -->
+    <div class="cart-overlay"></div>
+    <div class="cart-sidebar">
+        <div class="cart-header">
+            <h3 class="cart-title">🛒 سبد خرید</h3>
+            <button class="cart-close">✕</button>
+        </div>
+        <div class="cart-items">
+            <div class="cart-empty">
+                <div class="cart-empty-icon">🛒</div>
+                <h3>سبد خرید خالی است</h3>
+                <p>محصولاتی که دوست دارید را اضافه کنید</p>
+            </div>
+        </div>
+        <div class="cart-footer">
+            <div class="cart-total">
+                <span>جمع کل:</span>
+                <span class="cart-total-price">0 تومان</span>
+            </div>
+            <a href="#order" class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="document.querySelector('.cart-close').click()">
+                📋 ثبت سفارش
+            </a>
+        </div>
+    </div>
+
+    <!-- AR Modal -->
+    <div class="ar-modal">
+        <div class="ar-modal-content">
+            <div class="ar-modal-header">
+                <h3 class="ar-modal-title">مشاهده در واقعیت افزوده</h3>
+                <button class="ar-close">✕</button>
+            </div>
+            <div class="ar-viewer-container">
+                <model-viewer
+                    id="ar-model-viewer"
+                    ar
+                    ar-modes="scene-viewer webxr quick-look"
+                    camera-controls
+                    auto-rotate
+                    shadow-intensity="1"
+                    exposure="1"
+                    environment-image="neutral"
+                    alt="3D Model">
+                </model-viewer>
+            </div>
+            <div class="ar-buttons">
+                <button class="ar-btn ar-btn-primary">
+                    🥽 مشاهده در AR
+                </button>
+                <button class="ar-btn ar-btn-secondary">
+                    📱 مشاهده در گوشی
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Access (Hidden) -->
+    <div class="admin-access"></div>
+
+    <!-- Scripts -->
+    <script src="js/main.js"></script>
+</body>
+</html>
