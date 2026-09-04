@@ -637,3 +637,133 @@ function observeElements(existingObserver) {
         observer.observe(el);
     });
 }
+
+/* =====================================================================
+   PIBO UI layer (redesign 2026) — purely presentational enhancements.
+   Wraps existing behaviour without changing data flow or AR logic.
+   ===================================================================== */
+(function () {
+    const $ = (s, r = document) => r.querySelector(s);
+
+    /* ---- mobile nav ---- */
+    const nav = $('.navbar');
+    const toggle = $('.nav-toggle');
+    if (nav && toggle) {
+        toggle.addEventListener('click', () => {
+            const open = nav.classList.toggle('open');
+            toggle.setAttribute('aria-expanded', String(open));
+        });
+        nav.querySelectorAll('.nav-links a').forEach(a =>
+            a.addEventListener('click', () => nav.classList.remove('open')));
+        document.addEventListener('click', e => {
+            if (!nav.contains(e.target)) nav.classList.remove('open');
+        });
+    }
+
+    /* ---- sticky cart bar ---- */
+    const bar = $('.sticky-cart');
+    const openCart = () => {
+        $('.cart-sidebar')?.classList.add('active');
+        $('.cart-overlay')?.classList.add('active');
+    };
+    if (bar) {
+        bar.addEventListener('click', openCart);
+        bar.addEventListener('keydown', e => {
+            if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openCart(); }
+        });
+    }
+
+    /* ---- odometer-ish number roll ---- */
+    let lastTotal = 0;
+    function rollTo(el, value) {
+        if (!el) return;
+        const from = lastTotal, to = value, t0 = performance.now(), dur = 520;
+        lastTotal = value;
+        if (from === to) { el.textContent = value.toLocaleString('fa-IR') + ' تومان'; return; }
+        const step = now => {
+            const p = Math.min(1, (now - t0) / dur);
+            const e = 1 - Math.pow(1 - p, 3);
+            el.textContent = Math.round(from + (to - from) * e).toLocaleString('fa-IR') + ' تومان';
+            if (p < 1) requestAnimationFrame(step);
+        };
+        requestAnimationFrame(step);
+    }
+
+    /* ---- sync sticky bar with cart state ---- */
+    function syncBar() {
+        if (!bar || typeof cart === 'undefined') return;
+        const qty = cart.reduce((s, i) => s + i.qty, 0);
+        const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+        bar.querySelector('.sticky-cart-qty').textContent = qty.toLocaleString('fa-IR');
+        rollTo(bar.querySelector('.sticky-cart-total'), total);
+        bar.classList.toggle('visible', qty > 0);
+        document.body.classList.toggle('has-cart-bar', qty > 0);
+    }
+
+    const _updateCartUI = window.updateCartUI;
+    if (typeof _updateCartUI === 'function') {
+        window.updateCartUI = function () {
+            _updateCartUI.apply(this, arguments);
+            syncBar();
+        };
+    }
+
+    /* ---- fly to cart ---- */
+    function flyToCart(sourceImg) {
+        if (!sourceImg) return;
+        const target = (bar && bar.classList.contains('visible'))
+            ? bar.querySelector('.sticky-cart-icon')
+            : document.querySelector('.cart-btn');
+        if (!target) return;
+        const a = sourceImg.getBoundingClientRect();
+        const b = target.getBoundingClientRect();
+        const ghost = document.createElement('img');
+        ghost.src = sourceImg.currentSrc || sourceImg.src;
+        ghost.className = 'fly-ghost';
+        Object.assign(ghost.style, {
+            left: a.left + 'px', top: a.top + 'px',
+            width: a.width + 'px', height: a.height + 'px'
+        });
+        document.body.appendChild(ghost);
+        requestAnimationFrame(() => {
+            const dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+            const dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+            ghost.style.transform = `translate(${dx}px, ${dy}px) scale(.08) rotate(-25deg)`;
+            ghost.style.opacity = '.25';
+        });
+        setTimeout(() => {
+            ghost.remove();
+            (bar && bar.classList.contains('visible') ? bar : target).classList.add('bump');
+            setTimeout(() => { bar?.classList.remove('bump'); target.classList.remove('bump'); }, 520);
+        }, 850);
+    }
+
+    const _addToCart = window.addToCart;
+    if (typeof _addToCart === 'function') {
+        window.addToCart = function (productId) {
+            const card = document.querySelector(`.product-card [onclick*="${productId}"]`)?.closest('.product-card');
+            flyToCart(card?.querySelector('.product-image'));
+            return _addToCart.apply(this, arguments);
+        };
+    }
+
+    /* ---- gentle parallax on card images ---- */
+    let ticking = false;
+    function parallax() {
+        const vh = window.innerHeight;
+        document.querySelectorAll('.product-card .product-image').forEach(img => {
+            const r = img.getBoundingClientRect();
+            if (r.bottom < -120 || r.top > vh + 120) return;
+            const p = (r.top + r.height / 2 - vh / 2) / vh;
+            img.style.objectPosition = `50% ${50 + p * 8}%`;
+        });
+        ticking = false;
+    }
+    window.addEventListener('scroll', () => {
+        if (!ticking) { ticking = true; requestAnimationFrame(parallax); }
+    }, { passive: true });
+
+    /* ---- scroll-spy on category rail ---- */
+    document.addEventListener('DOMContentLoaded', () => setTimeout(syncBar, 300));
+    window.addEventListener('load', () => setTimeout(syncBar, 100));
+})();

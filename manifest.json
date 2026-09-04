@@ -1,0 +1,16 @@
+{
+  "name": "PIBO — Italian Heart, Napolitan Soul",
+  "short_name": "PIBO",
+  "description": "پیتزا پیبو — سفارش آنلاین با مشاهده سه‌بعدی و واقعیت افزوده",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FBF4E8",
+  "theme_color": "#E23D2E",
+  "icons": [
+    { "src": "https://api.iconify.design/noto/pizza.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

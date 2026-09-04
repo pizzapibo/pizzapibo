@@ -2,7 +2,6 @@
 <html lang="fa" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pibo | پیتزا پیبو - تجربه‌ای متفاوت با واقعیت افزوده</title>
     <meta name="description" content="پیتزا پیبو - سفارش آنلاین پیتزا با امکان مشاهده سه‌بعدی و واقعیت افزوده">
 
@@ -18,6 +17,14 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
+
+    <!-- PWA -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#E23D2E">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="PIBO">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
     <!-- Styles -->
     <link rel="stylesheet" href="css/style.css">
@@ -35,7 +42,7 @@
     <nav class="navbar">
         <a href="#" class="logo">
             <div class="logo-icon">🍕</div>
-            Pibo
+            <span>PIBO<small class="logo-tag">Italian Heart, Napolitan Soul</small></span>
         </a>
         <ul class="nav-links">
             <li><a href="#home">صفحه اصلی</a></li>
@@ -50,6 +57,7 @@
                 <span class="cart-count" style="display: none;">0</span>
             </button>
             <a href="admin.html" class="btn btn-primary">ورود ادمین</a>
+            <button class="nav-toggle" aria-label="منو" aria-expanded="false"><span></span></button>
         </div>
     </nav>
 
@@ -61,7 +69,7 @@
         <div class="hero-content">
             <div class="hero-badge">
                 <span>✨</span>
-                <span>تجربه واقعیت افزوده</span>
+                <span>Italian Heart · Napolitan Soul</span>
             </div>
             <h1 class="hero-title">
                 طعم <span>پیتزا</span> را قبل از خرید ببینید!
@@ -111,7 +119,8 @@
             <p class="section-desc">با کیفیت‌ترین مواد اولیه در پیتزای شما</p>
         </div>
         <div class="products-grid">
-            <!-- Products will be loaded dynamically -->
+            <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
+            <div class="skeleton-card"></div><div class="skeleton-card"></div><div class="skeleton-card"></div>
         </div>
     </section>
 
@@ -268,6 +277,16 @@
         </div>
     </footer>
 
+    <!-- Sticky Cart Bar (mobile) -->
+    <div class="sticky-cart" role="button" tabindex="0">
+        <div class="sticky-cart-icon">🛒</div>
+        <div class="sticky-cart-meta">
+            <div class="sticky-cart-count"><span class="sticky-cart-qty">0</span> آیتم در سبد</div>
+            <div class="sticky-cart-total">۰ تومان</div>
+        </div>
+        <div class="sticky-cart-cta">مشاهده سبد</div>
+    </div>
+
     <!-- Cart Sidebar -->
     <div class="cart-overlay"></div>
     <div class="cart-sidebar">
@@ -329,5 +348,10 @@
 
     <!-- Scripts -->
     <script src="js/main.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
+    </script>
 </body>
 </html>
