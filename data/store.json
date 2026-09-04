@@ -1,0 +1,138 @@
+{
+  "settings": {
+    "brand": "PIBO",
+    "tagline": "Italian Heart, Napolitan Soul",
+    "phone": "09140909878",
+    "whatsapp": "09140909878",
+    "telegram": "09140909878",
+    "instagram": "",
+    "address": "",
+    "about": "پیتزا نئوپولیتن با خمیر ۴۸ ساعته و فر هیزمی ۴۵۰ درجه.",
+    "categories": [
+      {
+        "id": "pizza",
+        "name": "پیتزا",
+        "icon": "🍕"
+      },
+      {
+        "id": "drink",
+        "name": "نوشیدنی",
+        "icon": "🥤"
+      },
+      {
+        "id": "potato",
+        "name": "سیب‌زمینی",
+        "icon": "🍟"
+      },
+      {
+        "id": "dessert",
+        "name": "دسر",
+        "icon": "🍰"
+      }
+    ]
+  },
+  "products": [
+    {
+      "id": "p1",
+      "name": "پیتزا مخصوص پیبو",
+      "description": "ژامبون گوشت و مرغ، قارچ تازه، فلفل دلمه‌ای و پنیر موزارلای مخصوص",
+      "price": 285000,
+      "category": "pizza",
+      "size": "۳۰ سانتی‌متر",
+      "image": "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80",
+      "badge": "پرفروش",
+      "available": true,
+      "ar": true,
+      "modelGLB": "models/pibo-pizza.glb",
+      "modelUSDZ": ""
+    },
+    {
+      "id": "p2",
+      "name": "پیتزا پپرونی",
+      "description": "پپرونی تند ایتالیایی روی سس گوجه‌ی خانگی و موزارلای کشدار",
+      "price": 265000,
+      "category": "pizza",
+      "size": "۳۰ سانتی‌متر",
+      "image": "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=800&q=80",
+      "badge": "",
+      "available": true,
+      "ar": true,
+      "modelGLB": "models/pibo-pizza.glb",
+      "modelUSDZ": ""
+    },
+    {
+      "id": "p3",
+      "name": "پیتزا مارگاریتا",
+      "description": "کلاسیک ناپلی: سس سان‌مارتزانو، موزارلا و ریحان تازه",
+      "price": 235000,
+      "category": "pizza",
+      "size": "۳۰ سانتی‌متر",
+      "image": "https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=800&q=80",
+      "badge": "کلاسیک",
+      "available": true,
+      "ar": false,
+      "modelGLB": "",
+      "modelUSDZ": ""
+    },
+    {
+      "id": "p4",
+      "name": "سیب‌زمینی سرخ‌کرده",
+      "description": "سیب‌زمینی ترد با ادویه‌ی مخصوص پیبو و سس سیر",
+      "price": 95000,
+      "category": "potato",
+      "size": "",
+      "image": "https://images.unsplash.com/photo-1630384060421-cb20d0e0649d?w=800&q=80",
+      "badge": "",
+      "available": true,
+      "ar": false,
+      "modelGLB": "",
+      "modelUSDZ": ""
+    },
+    {
+      "id": "p5",
+      "name": "نوشابه کلاسیک",
+      "description": "نوشابه‌ی گازدار سرد، قوطی ۳۳۰ میلی‌لیتر",
+      "price": 35000,
+      "category": "drink",
+      "size": "",
+      "image": "https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800&q=80",
+      "badge": "",
+      "available": true,
+      "ar": false,
+      "modelGLB": "",
+      "modelUSDZ": ""
+    },
+    {
+      "id": "p6",
+      "name": "چیزکیک نیویورکی",
+      "description": "چیزکیک خامه‌ای با سس توت‌فرنگی تازه",
+      "price": 125000,
+      "category": "dessert",
+      "size": "",
+      "image": "https://images.unsplash.com/photo-1533134242443-d4fd215305ad?w=800&q=80",
+      "badge": "جدید",
+      "available": true,
+      "ar": false,
+      "modelGLB": "",
+      "modelUSDZ": ""
+    }
+  ],
+  "faq": [
+    {
+      "q": "زمان تحویل چقدر است؟",
+      "a": "سفارش‌ها معمولاً بین ۳۰ تا ۴۵ دقیقه آماده و ارسال می‌شوند."
+    },
+    {
+      "q": "مشاهده‌ی سه‌بعدی چطور کار می‌کند؟",
+      "a": "روی دکمه‌ی «مشاهده سه‌بعدی» بزنید. روی آیفون از Quick Look و روی اندروید از Scene Viewer گوگل استفاده می‌شود تا پیتزا را در اندازه‌ی واقعی روی میزتان ببینید."
+    },
+    {
+      "q": "چطور سایت را روی گوشی نصب کنم؟",
+      "a": "در آیفون دکمه‌ی Share را بزنید و «Add to Home Screen» را انتخاب کنید. در اندروید مرورگر خودش پیشنهاد نصب می‌دهد."
+    },
+    {
+      "q": "خمیر پیتزا چه ویژگی‌ای دارد؟",
+      "a": "خمیر ما ۴۸ ساعت تخمیر سرد می‌شود و در فر هیزمی ۴۵۰ درجه پخته می‌شود؛ همان روش اصیل ناپل."
+    }
+  ]
+}

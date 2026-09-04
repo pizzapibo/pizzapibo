@@ -1,511 +1,356 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <meta name="theme-color" content="#FF3B30">
-    <title>Pibo Admin | پنل مدیریت پیبو</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>پنل مدیریت | PIBO</title>
+<meta name="theme-color" content="#FF5A1F">
+<meta name="robots" content="noindex,nofollow">
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100;300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
 
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+    /* ---- auth ---- */
+    .auth-screen {
+        position: fixed; inset: 0; z-index: 100;
+        display: grid; place-items: center;
+        padding: 20px;
+    }
+    .auth-card {
+        width: 100%; max-width: 400px;
+        padding: 36px 30px;
+        text-align: center;
+        border-radius: var(--radius-lg);
+        background: var(--glass-light-strong);
+        border: var(--glass-edge);
+        -webkit-backdrop-filter: var(--glass-blur);
+        backdrop-filter: var(--glass-blur);
+        box-shadow: var(--shadow-glass-lg);
+    }
+    .auth-mark {
+        width: 72px; height: 72px;
+        margin: 0 auto 20px;
+        display: grid; place-items: center;
+        border-radius: 50%;
+        background: linear-gradient(150deg, #FF8A52, var(--orange) 50%, var(--orange-dark));
+        color: #fff; font-size: 1.9rem; font-weight: 900;
+        box-shadow: 0 14px 30px -12px rgba(255,90,31,.9), var(--glass-highlight);
+    }
+    .auth-card h1 { font-size: 1.4rem; font-weight: 900; }
+    .auth-card p.sub { color: var(--ink-soft); font-size: .9rem; margin: 4px 0 22px; }
+    .auth-err { min-height: 22px; margin-top: 10px; color: var(--red); font-weight: 800; font-size: .87rem; }
 
-    <style>
-        /* PIBO Admin — "STAMPA" neo-brutalist system */
-        :root {
-            --ink:#12100E; --ink-2:#3A3531;
-            --paper:#FFF8E7; --paper-2:#FFEFC9; --white:#FFFFFF;
-            --red:#FF3B30; --red-deep:#D6221A; --yellow:#FFD11A;
-            --green:#14B85A; --blue:#2F6BFF; --pink:#FF7BB0; --orange:#FF8A1F;
-            --primary:var(--red); --primary-dark:var(--red-deep); --secondary:var(--yellow);
-            --dark:var(--ink); --gray:var(--paper-2); --gray-dark:var(--ink-2);
-            --success:var(--green); --danger:var(--red-deep); --warning:var(--orange);
-            --bw:3px; --bw-l:4px;
-            --hs:5px 5px 0 var(--ink); --hs-lg:8px 8px 0 var(--ink); --hs-sm:3px 3px 0 var(--ink);
-            --snap:cubic-bezier(.2,.9,.3,1.2); --ease:cubic-bezier(.2,.7,.3,1);
-            --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
-        }
+    .field { margin-bottom: 14px; text-align: right; }
+    .field label { display: block; margin-bottom: 7px; font-size: .86rem; font-weight: 800; }
+    .field input, .field select, .field textarea {
+        width: 100%;
+        padding: 13px 16px;
+        border-radius: var(--radius-sm);
+        border: 1px solid var(--line);
+        background: var(--white);
+        font-size: .96rem;
+        transition: border-color .25s, box-shadow .25s;
+    }
+    .field textarea { min-height: 92px; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus {
+        outline: none;
+        border-color: var(--orange);
+        box-shadow: 0 0 0 4px rgba(255,90,31,.12);
+    }
+    .auth-card .field input { text-align: center; letter-spacing: 3px; }
 
-        * { margin:0; padding:0; box-sizing:border-box; }
+    /* ---- shell ---- */
+    .admin-shell { display: none; padding-bottom: calc(40px + var(--safe-b)); }
+    .admin-top {
+        position: sticky;
+        top: 0; z-index: 60;
+        display: flex; align-items: center; justify-content: space-between; gap: 12px;
+        padding: calc(12px + var(--safe-t)) 18px 12px;
+        background: var(--glass-light-strong);
+        border-bottom: 1px solid var(--line);
+        -webkit-backdrop-filter: var(--glass-blur);
+        backdrop-filter: var(--glass-blur);
+    }
+    .admin-tabs {
+        display: flex; gap: 6px;
+        overflow-x: auto; scrollbar-width: none;
+        padding: 14px 0 4px;
+    }
+    .admin-tabs::-webkit-scrollbar { display: none; }
+    .admin-tab {
+        flex: 0 0 auto;
+        padding: 10px 18px;
+        border-radius: var(--radius-pill);
+        background: var(--glass-light);
+        border: var(--glass-edge);
+        box-shadow: var(--shadow-glass);
+        font-weight: 800; font-size: .9rem;
+        color: var(--ink-soft);
+        transition: transform .34s var(--spring), background .25s, color .25s;
+    }
+    .admin-tab.active {
+        background: linear-gradient(160deg, #FF7A45, var(--orange) 52%, var(--orange-dark));
+        color: #fff;
+        box-shadow: 0 12px 26px -14px rgba(255,90,31,.9), var(--glass-highlight);
+    }
+    .pane { display: none; padding-top: 18px; }
+    .pane.active { display: block; animation: paneIn .45s var(--ease) both; }
+    @keyframes paneIn { from { opacity: 0; transform: translateY(10px); } }
 
-        body {
-            font-family:'Vazirmatn',-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
-            background:var(--paper);
-            background-image:
-                linear-gradient(rgba(18,16,14,.045) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(18,16,14,.045) 1px, transparent 1px);
-            background-size:34px 34px;
-            color:var(--ink); direction:rtl; line-height:1.7;
-            -webkit-font-smoothing:antialiased; -webkit-tap-highlight-color:transparent;
-        }
-        img { max-width:100%; display:block; }
-        button, input, textarea, select { font:inherit; color:inherit; }
-        ::selection { background:var(--yellow); color:var(--ink); }
-        ::-webkit-scrollbar { width:12px; height:12px; }
-        ::-webkit-scrollbar-track { background:var(--paper-2); }
-        ::-webkit-scrollbar-thumb { background:var(--ink); border:3px solid var(--paper-2); }
+    .panel {
+        padding: 22px;
+        margin-bottom: 18px;
+        border-radius: var(--radius);
+        background: var(--glass-light);
+        border: var(--glass-edge);
+        -webkit-backdrop-filter: var(--glass-blur-soft);
+        backdrop-filter: var(--glass-blur-soft);
+        box-shadow: var(--shadow-glass);
+    }
+    .panel h3 { font-size: 1.05rem; font-weight: 900; margin-bottom: 16px; }
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 16px; }
 
-        /* ---------- Login ---------- */
-        #login-screen {
-            position:fixed; inset:0; z-index:9999;
-            display:flex; align-items:center; justify-content:center; padding:18px;
-            background:var(--red);
-            background-image:
-                repeating-linear-gradient(45deg, rgba(18,16,14,.07) 0 18px, transparent 18px 36px);
-        }
-        .login-box {
-            width:100%; max-width:400px; padding:36px 28px; text-align:center;
-            background:var(--paper);
-            border:var(--bw-l) solid var(--ink);
-            box-shadow:12px 12px 0 var(--ink);
-            animation:drop .3s var(--snap) both;
-        }
-        @keyframes drop { from { opacity:0; transform:translateY(-18px) rotate(-2deg); } }
-        .login-logo {
-            width:76px; height:76px; margin:0 auto 20px;
-            display:grid; place-items:center; font-size:2.1rem;
-            background:var(--yellow); border:var(--bw) solid var(--ink); box-shadow:var(--hs);
-            transform:rotate(-3deg);
-        }
-        .login-title { font-size:1.5rem; font-weight:900; letter-spacing:-1px; }
-        .login-subtitle { font-size:.9rem; font-weight:600; color:var(--ink-2); margin:4px 0 24px; }
-        .login-input {
-            width:100%; padding:15px 16px; margin-bottom:14px;
-            background:var(--white); border:var(--bw) solid var(--ink);
-            text-align:center; letter-spacing:4px; font-size:1rem; font-weight:700;
-            transition:box-shadow .14s var(--ease), transform .14s;
-        }
-        .login-input:focus { outline:none; box-shadow:var(--hs); transform:translate(-2px,-2px); }
-        .login-btn {
-            width:100%; padding:15px; cursor:pointer;
-            background:var(--ink); color:var(--yellow);
-            border:var(--bw) solid var(--ink); box-shadow:5px 5px 0 var(--red);
-            font-size:1rem; font-weight:900;
-            transition:transform .12s var(--ease), box-shadow .12s;
-        }
-        .login-btn:hover  { transform:translate(-2px,-2px); box-shadow:8px 8px 0 var(--red); }
-        .login-btn:active { transform:translate(3px,3px); box-shadow:1px 1px 0 var(--red); }
-        .login-error { min-height:22px; margin-top:12px; font-size:.88rem; font-weight:900; color:var(--red-deep); }
-        @keyframes shake {
-            10%,90% { transform:translateX(-3px); } 20%,80% { transform:translateX(7px); }
-            30%,50%,70% { transform:translateX(-11px); } 40%,60% { transform:translateX(11px); }
-        }
+    /* ---- product list ---- */
+    .plist { display: flex; flex-direction: column; gap: 10px; }
+    .pitem {
+        display: flex; align-items: center; gap: 12px;
+        padding: 12px;
+        border-radius: var(--radius-sm);
+        background: var(--white);
+        border: 1px solid var(--line);
+        box-shadow: var(--shadow-xs);
+    }
+    .pitem img { width: 58px; height: 58px; flex: 0 0 58px; border-radius: 13px; object-fit: cover; background: var(--cream-2); }
+    .pitem .pi-info { flex: 1; min-width: 0; }
+    .pitem .pi-info b { display: block; font-size: .96rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pitem .pi-info span { font-size: .82rem; color: var(--ink-soft); }
+    .pi-tools { display: flex; align-items: center; gap: 6px; }
+    .btn-icon {
+        width: 38px; height: 38px;
+        display: grid; place-items: center;
+        border-radius: 12px;
+        background: var(--cream);
+        font-size: .95rem;
+        transition: transform .3s var(--spring), background .2s;
+    }
+    .btn-icon:hover { background: var(--cream-2); }
+    .btn-icon.danger:hover { background: rgba(229,72,60,.16); }
+    .pill {
+        padding: 4px 11px;
+        border-radius: var(--radius-pill);
+        font-size: .74rem;
+        font-weight: 900;
+    }
+    .pill.ok  { background: rgba(47,158,91,.15); color: var(--green); }
+    .pill.off { background: rgba(255,90,31,.15); color: var(--orange-dark); }
 
-        /* ---------- Shell ---------- */
-        #admin-panel { display:none; }
+    .hintbox {
+        padding: 16px 18px;
+        border-radius: var(--radius-sm);
+        background: rgba(255,180,0,.12);
+        border: 1px solid rgba(255,180,0,.3);
+        font-size: .88rem;
+        line-height: 2;
+    }
+    code { background: rgba(36,22,8,.08); padding: 1px 7px; border-radius: 6px; font-family: ui-monospace, Menlo, monospace; font-size: .86em; }
 
-        .admin-header {
-            position:sticky; top:0; z-index:100;
-            display:flex; align-items:center; justify-content:space-between; gap:14px;
-            padding:12px 18px calc(12px);
-            padding-top:calc(12px + var(--safe-t));
-            background:var(--ink); color:var(--paper);
-            border-bottom:var(--bw-l) solid var(--ink);
-        }
-        .admin-logo { display:flex; align-items:center; gap:10px; font-weight:900; font-size:1.15rem; letter-spacing:-.3px; }
-        .admin-logo span {
-            width:40px; height:40px; display:grid; place-items:center; font-size:1.25rem;
-            background:var(--yellow); border:var(--bw) solid var(--paper);
-        }
-        .admin-user { display:flex; align-items:center; gap:10px; font-weight:800; font-size:.9rem; }
-        .admin-logout {
-            padding:9px 16px; cursor:pointer;
-            background:var(--red); color:var(--white);
-            border:var(--bw) solid var(--paper);
-            font-weight:900; font-size:.85rem;
-            transition:transform .12s, background .16s;
-        }
-        .admin-logout:hover  { background:var(--yellow); color:var(--ink); }
-        .admin-logout:active { transform:translate(2px,2px); }
+    .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px,1fr)); gap: 12px; margin-bottom: 18px; }
+    .stat {
+        padding: 18px;
+        border-radius: var(--radius-sm);
+        background: var(--glass-light);
+        border: var(--glass-edge);
+        box-shadow: var(--shadow-glass);
+    }
+    .stat b { display: block; font-size: 1.7rem; font-weight: 900; line-height: 1.2; }
+    .stat span { font-size: .84rem; color: var(--ink-soft); font-weight: 700; }
 
-        .admin-container {
-            display:grid; grid-template-columns:240px 1fr; gap:20px;
-            max-width:1340px; margin:0 auto;
-            padding:20px 18px calc(40px + var(--safe-b));
-            align-items:start;
-        }
-
-        .admin-sidebar {
-            position:sticky; top:82px;
-            display:flex; flex-direction:column; gap:0;
-            background:var(--white);
-            border:var(--bw) solid var(--ink);
-            box-shadow:var(--hs);
-        }
-        .admin-tab {
-            display:flex; align-items:center; gap:11px;
-            padding:14px 16px; cursor:pointer;
-            font-weight:900; font-size:.94rem;
-            border-bottom:var(--bw) solid var(--ink);
-            transition:background .15s, color .15s, transform .1s;
-        }
-        .admin-tab:last-child { border-bottom:0; }
-        .admin-tab:hover { background:var(--yellow); }
-        .admin-tab-icon { font-size:1.1rem; line-height:1; }
-        .admin-tab.active { background:var(--ink); color:var(--yellow); }
-
-        .admin-content { min-width:0; }
-        .admin-tab-content { display:none; }
-        .admin-tab-content.active { display:block; animation:fade .25s var(--ease) both; }
-        @keyframes fade { from { opacity:0; transform:translateY(8px); } }
-
-        .admin-page-title {
-            display:inline-block;
-            font-size:1.4rem; font-weight:900; letter-spacing:-.8px;
-            margin-bottom:20px; padding:5px 14px;
-            background:var(--yellow); border:var(--bw) solid var(--ink); box-shadow:var(--hs-sm);
-            transform:rotate(-1deg);
-        }
-
-        /* ---------- Stats ---------- */
-        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:14px; margin-bottom:24px; }
-        .stat-card {
-            padding:18px;
-            background:var(--white);
-            border:var(--bw) solid var(--ink);
-            box-shadow:6px 6px 0 var(--red);
-            transition:transform .14s var(--ease), box-shadow .14s;
-        }
-        .stat-card:nth-child(2) { box-shadow:6px 6px 0 var(--blue); }
-        .stat-card:nth-child(3) { box-shadow:6px 6px 0 var(--green); }
-        .stat-card:nth-child(4) { box-shadow:6px 6px 0 var(--yellow); }
-        .stat-card:hover { transform:translate(-3px,-3px); }
-        .stat-icon {
-            width:50px; height:50px; margin-bottom:12px;
-            display:grid; place-items:center; font-size:1.45rem;
-            border:var(--bw) solid var(--ink);
-        }
-        .stat-icon.orange { background:var(--red); }
-        .stat-icon.blue   { background:var(--blue); }
-        .stat-icon.green  { background:var(--green); }
-        .stat-icon.red    { background:var(--yellow); }
-        .stat-value { font-size:1.9rem; font-weight:900; line-height:1.15; letter-spacing:-1.5px; }
-        .stat-label { font-size:.85rem; font-weight:800; color:var(--ink-2); }
-
-        /* ---------- Forms ---------- */
-        .admin-form {
-            padding:22px; margin-bottom:24px;
-            background:var(--white);
-            border:var(--bw) solid var(--ink);
-            box-shadow:var(--hs);
-        }
-        .admin-form h3 { font-size:1.05rem; font-weight:900; }
-        .admin-form label { display:block; margin-bottom:7px; font-size:.86rem; font-weight:900; }
-        .admin-form input, .admin-form select, .admin-form textarea {
-            width:100%; padding:13px 15px;
-            background:var(--paper); border:var(--bw) solid var(--ink);
-            font-size:.96rem; font-weight:600;
-            transition:box-shadow .14s var(--ease), transform .14s, background .16s;
-        }
-        .admin-form textarea { min-height:106px; resize:vertical; }
-        .admin-form input::placeholder, .admin-form textarea::placeholder { color:#9a938a; font-weight:500; }
-        .admin-form input:focus, .admin-form select:focus, .admin-form textarea:focus {
-            outline:none; background:var(--white); box-shadow:var(--hs-sm); transform:translate(-2px,-2px);
-        }
-        .form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:14px; margin-bottom:16px; }
-
-        /* switch */
-        .checkbox-wrapper { display:flex; align-items:center; gap:12px; padding-top:4px; }
-        .checkbox-wrapper input[type="checkbox"] {
-            appearance:none; -webkit-appearance:none;
-            position:relative; flex:0 0 58px;
-            width:58px; height:32px; padding:0; cursor:pointer;
-            background:var(--paper-2); border:var(--bw) solid var(--ink);
-            transition:background .18s;
-        }
-        .checkbox-wrapper input[type="checkbox"]::after {
-            content:''; position:absolute; top:0; right:0;
-            width:26px; height:26px; background:var(--ink);
-            transition:transform .18s var(--snap);
-        }
-        .checkbox-wrapper input[type="checkbox"]:checked { background:var(--green); }
-        .checkbox-wrapper input[type="checkbox"]:checked::after { transform:translateX(-26px); background:var(--white); }
-        .checkbox-wrapper input[type="checkbox"]:focus { outline:none; box-shadow:var(--hs-sm); }
-        .checkbox-wrapper label { margin:0 !important; font-weight:800; }
-
-        .form-actions { display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
-
-        .btn {
-            display:inline-flex; align-items:center; justify-content:center; gap:8px;
-            padding:13px 22px; cursor:pointer;
-            background:var(--white); color:var(--ink);
-            border:var(--bw) solid var(--ink); box-shadow:var(--hs);
-            font-weight:900; font-size:.94rem; line-height:1;
-            transition:transform .12s var(--ease), box-shadow .12s, background .16s;
-        }
-        .btn:hover  { transform:translate(-2px,-2px); box-shadow:var(--hs-lg); }
-        .btn:active { transform:translate(3px,3px); box-shadow:1px 1px 0 var(--ink); }
-        .btn-primary   { background:var(--red); color:var(--white); }
-        .btn-secondary { background:var(--paper-2); }
-        .btn-success   { background:var(--green); color:var(--white); }
-        .btn-danger    { background:var(--ink); color:var(--red); }
-        .btn-sm { padding:9px 15px; font-size:.84rem; box-shadow:var(--hs-sm); }
-
-        .btn-icon {
-            width:40px; height:40px; cursor:pointer;
-            display:inline-grid; place-items:center; font-size:1rem;
-            background:var(--white); border:var(--bw) solid var(--ink); box-shadow:var(--hs-sm);
-            transition:transform .12s, box-shadow .12s, background .16s;
-        }
-        .btn-icon:active { transform:translate(2px,2px); box-shadow:none; }
-        .btn-edit:hover   { background:var(--yellow); }
-        .btn-delete:hover { background:var(--red); }
-
-        /* ---------- Lists ---------- */
-        .admin-list {
-            background:var(--white);
-            border:var(--bw) solid var(--ink);
-            box-shadow:var(--hs);
-        }
-        .admin-item {
-            display:flex; align-items:center; gap:14px;
-            padding:14px 16px;
-            border-bottom:var(--bw) solid var(--ink);
-            transition:background .15s;
-        }
-        .admin-item:last-child { border-bottom:0; }
-        .admin-item:hover { background:var(--paper-2); }
-        .admin-item-img {
-            width:62px; height:62px; flex:0 0 62px; object-fit:cover;
-            border:var(--bw) solid var(--ink);
-        }
-        .admin-item-icon {
-            width:54px; height:54px; flex:0 0 54px;
-            display:grid; place-items:center; font-size:1.5rem;
-            background:var(--yellow); border:var(--bw) solid var(--ink);
-        }
-        .admin-item-info { flex:1; min-width:0; }
-        .admin-item-info h4 { font-size:1rem; font-weight:900; }
-        .admin-item-info p { font-size:.85rem; font-weight:600; color:var(--ink-2); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-        .admin-item-actions { display:flex; gap:8px; }
-
-        .badge {
-            display:inline-block; padding:3px 11px;
-            border:var(--bw) solid var(--ink);
-            font-size:.74rem; font-weight:900;
-        }
-        .badge-success { background:var(--green); color:var(--white); }
-        .badge-warning { background:var(--yellow); }
-        .badge-danger  { background:var(--red); color:var(--white); }
-
-        /* ---------- Orders ---------- */
-        .admin-order-card {
-            padding:20px; margin-bottom:14px;
-            background:var(--white);
-            border:var(--bw) solid var(--ink);
-            box-shadow:var(--hs);
-            transition:transform .14s var(--ease), box-shadow .14s;
-        }
-        .admin-order-card:hover { transform:translate(-3px,-3px); box-shadow:var(--hs-lg); }
-        .order-header {
-            display:flex; align-items:center; justify-content:space-between;
-            flex-wrap:wrap; gap:10px;
-            padding-bottom:12px; margin-bottom:12px;
-            border-bottom:var(--bw) solid var(--ink);
-            font-weight:900;
-        }
-        .order-customer { font-size:.9rem; font-weight:600; color:var(--ink-2); line-height:1.9; }
-        .order-items { margin:12px 0; }
-        .order-item-row {
-            display:flex; align-items:center; justify-content:space-between;
-            padding:10px 13px; margin-bottom:7px;
-            background:var(--paper); border:var(--bw) solid var(--ink);
-            font-size:.9rem; font-weight:700;
-        }
-        .order-footer {
-            display:flex; align-items:center; justify-content:space-between;
-            flex-wrap:wrap; gap:12px;
-            padding-top:12px; border-top:var(--bw) solid var(--ink);
-            font-weight:900;
-        }
-        .order-actions { display:flex; flex-wrap:wrap; gap:8px; }
-
-        code {
-            background:var(--ink); color:var(--yellow);
-            padding:1px 6px; font-family:ui-monospace,Menlo,monospace; font-size:.85em;
-        }
-
-        /* ---------- Responsive ---------- */
-        @media (max-width:900px) {
-            .admin-container { grid-template-columns:1fr; padding:14px 12px calc(30px + var(--safe-b)); }
-            .admin-sidebar {
-                position:sticky; top:64px; z-index:90;
-                flex-direction:row; overflow-x:auto; scrollbar-width:none;
-                box-shadow:var(--hs-sm);
-            }
-            .admin-sidebar::-webkit-scrollbar { display:none; }
-            .admin-tab {
-                flex:0 0 auto; padding:11px 14px; font-size:.86rem;
-                border-bottom:0; border-left:var(--bw) solid var(--ink);
-            }
-            .admin-tab:last-child { border-left:0; }
-            .admin-tab span:not(.admin-tab-icon) { white-space:nowrap; }
-            .admin-form { padding:16px; }
-            .stats-grid { grid-template-columns:1fr 1fr; gap:12px; }
-            .stat-card { padding:14px; }
-            .stat-value { font-size:1.5rem; }
-            .admin-item { flex-wrap:wrap; }
-            .admin-page-title { font-size:1.15rem; }
-            .login-box { padding:28px 20px; box-shadow:8px 8px 0 var(--ink); }
-        }
-        @media (prefers-reduced-motion:reduce) {
-            *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
-        }
-    </style>
+    @media (max-width: 640px) {
+        .admin-top { padding-inline: 14px; }
+        .panel { padding: 16px; }
+    }
+</style>
 </head>
 <body>
-    <div id="login-screen">
-        <div class="login-box">
-            <div class="login-logo">🔐</div>
-            <h1 class="login-title">پنل مدیریت پیبو</h1>
-            <p class="login-subtitle">برای دسترسی رمز عبور را وارد کنید</p>
-            <form id="login-form">
-                <input type="password" class="login-input" id="admin-password" placeholder="رمز عبور" required autocomplete="off">
-                <button type="submit" class="login-btn">ورود به پنل</button>
-            </form>
-            <p class="login-error" id="login-error"></p>
-        </div>
-    </div>
 
-    <div id="admin-panel">
-        <header class="admin-header">
-            <div class="admin-logo"><span>🍕</span>Pibo Admin</div>
-            <div class="admin-user">
-                <span>👤 مدیر</span>
-                <button class="admin-logout" onclick="logout()">خروج</button>
+<div class="ambient" aria-hidden="true"></div>
+
+<!-- ============ LOGIN ============ -->
+<div class="auth-screen" id="authScreen">
+    <div class="auth-card" id="authCard">
+        <div class="auth-mark">پ</div>
+        <h1>پنل مدیریت پیبو</h1>
+        <p class="sub">برای ادامه رمز عبور را وارد کن</p>
+        <form id="authForm">
+            <div class="field">
+                <input type="password" id="authPass" placeholder="رمز عبور" autocomplete="current-password" required>
             </div>
-        </header>
+            <button type="submit" class="btn btn-primary" style="width:100%">ورود</button>
+        </form>
+        <p class="auth-err" id="authErr"></p>
+    </div>
+</div>
 
-        <div class="admin-container">
-            <aside class="admin-sidebar">
-                <div class="admin-tab active" data-tab="dashboard"><span class="admin-tab-icon">📊</span><span>داشبورد</span></div>
-                <div class="admin-tab" data-tab="products"><span class="admin-tab-icon">🍕</span><span>محصولات</span></div>
-                <div class="admin-tab" data-tab="categories"><span class="admin-tab-icon">🏷️</span><span>دسته‌بندی‌ها</span></div>
-                <div class="admin-tab" data-tab="orders"><span class="admin-tab-icon">📋</span><span>سفارشات</span></div>
-                <div class="admin-tab" data-tab="settings"><span class="admin-tab-icon">⚙️</span><span>تنظیمات</span></div>
-            </aside>
-
-            <main class="admin-content">
-                <div class="admin-tab-content active" id="tab-dashboard">
-                    <h2 class="admin-page-title">📊 داشبورد</h2>
-                    <div class="stats-grid">
-                        <div class="stat-card"><div class="stat-icon orange">🍕</div><div class="stat-value" id="stat-products">0</div><div class="stat-label">محصولات</div></div>
-                        <div class="stat-card"><div class="stat-icon blue">📋</div><div class="stat-value" id="stat-orders">0</div><div class="stat-label">سفارشات</div></div>
-                        <div class="stat-card"><div class="stat-icon green">💰</div><div class="stat-value" id="stat-revenue">0</div><div class="stat-label">درآمد</div></div>
-                        <div class="stat-card"><div class="stat-icon red">⏳</div><div class="stat-value" id="stat-pending">0</div><div class="stat-label">در انتظار</div></div>
-                    </div>
-
-                    <div class="admin-form">
-                        <h3 style="margin-bottom: 20px;">📱 اطلاعات جانبی و QR کد</h3>
-                        <p style="color: #888; margin-bottom: 20px;">این اطلاعات فقط در پنل ادمین قابل مشاهده است.</p>
-                        <div style="background: var(--gray); padding: 25px; border-radius: 16px;">
-                            <p><strong>🔗 لینک سایت:</strong> <span style="color: var(--primary);">https://pibo-c87f1.web.app</span></p>
-                            <p style="margin-top: 15px;"><strong>📱 واتس‌اپ:</strong> 09140909878</p>
-                            <p style="margin-top: 15px;"><strong>✈️ تلگرام:</strong> 09140909878</p>
-                            <p style="margin-top: 15px;"><strong>🥽 AR Models:</strong> assets/models/</p>
-                            <p style="margin-top: 15px; color: #888; font-size: 0.9rem;">💡 فایل‌های GLB و USDZ را در assets/models قرار دهید.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="admin-tab-content" id="tab-products">
-                    <h2 class="admin-page-title">🍕 مدیریت محصولات</h2>
-                    <div class="admin-form">
-                        <h3 id="product-form-title" style="margin-bottom: 25px;">افزودن محصول جدید</h3>
-                        <form id="product-form">
-                            <input type="hidden" id="product-id">
-                            <div class="form-row">
-                                <div><label>نام محصول *</label><input type="text" id="prod-name" required placeholder="مثلاً پیتزا مخصوص"></div>
-                                <div><label>قیمت (تومان) *</label><input type="number" id="prod-price" required placeholder="250000"></div>
-                            </div>
-                            <div class="form-row">
-                                <div><label>دسته‌بندی *</label><select id="prod-category" required><option value="">انتخاب کنید</option></select></div>
-                                <div><label>برچسب</label><input type="text" id="prod-badge" placeholder="پرفروش، جدید"></div>
-                            </div>
-                            <div class="form-row">
-                                <div><label>تصویر (URL) *</label><input type="url" id="prod-image" required placeholder="https://..."></div>
-                                <div><label>وضعیت</label><div class="checkbox-wrapper"><input type="checkbox" id="prod-available" checked><label for="prod-available" style="margin:0;">محصول فعال</label></div></div>
-                            </div>
-                            <div><label>توضیحات</label><textarea id="prod-desc" placeholder="توضیحات..."></textarea></div>
-                            <div class="form-row" style="margin-top: 20px;">
-                                <div><label>🔗 لینک GLB (AR)</label><input type="url" id="prod-glb" placeholder="assets/models/pizza.glb"></div>
-                                <div><label>🔗 لینک USDZ (iOS)</label><input type="url" id="prod-usdz" placeholder="assets/models/pizza.usdz"></div>
-                            </div>
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">💾 ذخیره</button>
-                                <button type="button" class="btn btn-secondary" id="cancel-product">لغو</button>
-                            </div>
-                        </form>
-                    </div>
-                    <h3 style="margin-bottom: 20px;">لیست محصولات</h3>
-                    <div class="admin-list" id="admin-products-list"><p style="text-align:center;padding:40px;color:#888;">در حال بارگذاری...</p></div>
-                </div>
-
-                <div class="admin-tab-content" id="tab-categories">
-                    <h2 class="admin-page-title">🏷️ دسته‌بندی‌ها</h2>
-                    <div class="admin-form">
-                        <h3 style="margin-bottom: 25px;">افزودن/ویرایش</h3>
-                        <form id="category-form">
-                            <div class="form-row">
-                                <div><label>شناسه (انگلیسی) *</label><input type="text" id="cat-id" required placeholder="pizza"></div>
-                                <div><label>نام *</label><input type="text" id="cat-name" required placeholder="پیتزا"></div>
-                                <div><label>آیکون (ایموجی) *</label><input type="text" id="cat-icon" required placeholder="🍕"></div>
-                            </div>
-                            <div class="form-actions"><button type="submit" class="btn btn-primary">💾 ذخیره</button></div>
-                        </form>
-                    </div>
-                    <h3 style="margin-bottom: 20px;">لیست</h3>
-                    <div class="admin-list" id="admin-categories-list"><p style="text-align:center;padding:40px;color:#888;">در حال بارگذاری...</p></div>
-                </div>
-
-                <div class="admin-tab-content" id="tab-orders">
-                    <h2 class="admin-page-title">📋 سفارشات</h2>
-                    <div id="admin-orders-list"><p style="text-align:center;padding:40px;color:#888;">در حال بارگذاری...</p></div>
-                </div>
-
-                <div class="admin-tab-content" id="tab-settings">
-                    <h2 class="admin-page-title">⚙️ تنظیمات</h2>
-                    <div class="admin-form">
-                        <h3 style="margin-bottom: 25px;">📱 اطلاعات تماس</h3>
-                        <form id="settings-form">
-                            <div class="form-row">
-                                <div><label>شماره تماس</label><input type="tel" id="set-phone" placeholder="09140909878"></div>
-                                <div><label>واتس‌اپ</label><input type="tel" id="set-whatsapp" placeholder="09140909878"></div>
-                                <div><label>تلگرام</label><input type="tel" id="set-telegram" placeholder="09140909878"></div>
-                            </div>
-                            <div><label>🔗 لینک QR Code</label><input type="url" id="set-qr" placeholder="https://..."></div>
-                            <div style="margin-top: 20px;"><label>📝 درباره ما</label><textarea id="set-about" placeholder="توضیحات..."></textarea></div>
-                            <div class="form-actions"><button type="submit" class="btn btn-primary">💾 ذخیره</button></div>
-                        </form>
-                    </div>
-
-                    <div class="admin-form" style="margin-top: 30px;">
-                        <h3 style="margin-bottom: 20px;">🔒 امنیت</h3>
-                        <p style="color: #888; line-height: 1.8;">
-                            رمز عبور: <strong style="color: var(--primary);">Arshiakamali2898</strong><br>
-                            برای تغییر، فایل admin.js را ویرایش کنید.
-                        </p>
-                    </div>
-
-                    <div class="admin-form" style="margin-top: 30px;">
-                        <h3 style="margin-bottom: 20px;">🥽 راهنمای AR</h3>
-                        <div style="background: rgba(255,107,53,0.05); padding: 25px; border-radius: 16px; line-height: 2;">
-                            <p><strong>۱.</strong> مدل ۳D را در <strong>Luma AI</strong> بسازید</p>
-                            <p><strong>۲.</strong> خروجی <strong>GLB</strong> و <strong>USDZ</strong> بگیرید</p>
-                            <p><strong>۳.</strong> در پوشه <code>assets/models/</code> قرار دهید</p>
-                            <p><strong>۴.</strong> مسیر را در فرم محصول وارد کنید</p>
-                            <p><strong>۵.</strong> iPhone: Quick Look | Android: Scene Viewer</p>
-                            <p style="margin-top: 15px; color: var(--primary); font-weight: 700;">💡 model-viewer بهترین روش AR را انتخاب می‌کند.</p>
-                        </div>
-                    </div>
-                </div>
-            </main>
+<!-- ============ ADMIN ============ -->
+<div class="admin-shell" id="adminShell">
+    <div class="admin-top">
+        <a href="index.html" class="brand">
+            <span class="brand-mark" aria-hidden="true">پ</span>
+            <span class="brand-text"><span class="brand-name">PIBO</span><span class="brand-tag">ADMIN</span></span>
+        </a>
+        <div style="display:flex;gap:9px;align-items:center">
+            <button class="btn btn-primary" id="publishBtn">انتشار روی گیت‌هاب</button>
+            <button class="icon-btn" id="logoutBtn" aria-label="خروج">⏻</button>
         </div>
     </div>
 
-    <script src="js/admin.js"></script>
+    <div class="wrap">
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-pane="products">🍕 محصولات</button>
+            <button class="admin-tab" data-pane="cats">🏷️ دسته‌بندی‌ها</button>
+            <button class="admin-tab" data-pane="faq">❓ سوالات</button>
+            <button class="admin-tab" data-pane="settings">⚙️ تنظیمات</button>
+            <button class="admin-tab" data-pane="github">🐙 گیت‌هاب</button>
+        </div>
+
+        <!-- ---- PRODUCTS ---- -->
+        <div class="pane active" id="pane-products">
+            <div class="stat-row">
+                <div class="stat"><b id="stProducts">۰</b><span>محصول</span></div>
+                <div class="stat"><b id="stCats">۰</b><span>دسته‌بندی</span></div>
+                <div class="stat"><b id="stAR">۰</b><span>دارای AR</span></div>
+                <div class="stat"><b id="stOut">۰</b><span>تمام‌شده</span></div>
+            </div>
+
+            <div class="panel">
+                <h3 id="formTitle">افزودن محصول</h3>
+                <form id="prodForm">
+                    <input type="hidden" id="pId">
+                    <div class="grid-2">
+                        <div class="field"><label>نام محصول *</label><input type="text" id="pName" required placeholder="پیتزا مارگاریتا"></div>
+                        <div class="field"><label>قیمت (تومان) *</label><input type="number" id="pPrice" required placeholder="250000" min="0"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field"><label>دسته‌بندی *</label><select id="pCat" required></select></div>
+                        <div class="field"><label>قطر / اندازه</label><input type="text" id="pSize" placeholder="۳۰ سانتی‌متر"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field"><label>برچسب</label><input type="text" id="pBadge" placeholder="پرفروش"></div>
+                        <div class="field"><label>آدرس عکس *</label><input type="text" id="pImage" required placeholder="https://…"></div>
+                    </div>
+                    <div class="field"><label>توضیح کوتاه</label><textarea id="pDesc" placeholder="مواد و توضیح کوتاه…"></textarea></div>
+                    <div class="grid-2">
+                        <div class="field"><label>فایل GLB (اندروید/وب)</label><input type="text" id="pGlb" placeholder="models/margherita.glb"></div>
+                        <div class="field"><label>فایل USDZ (آیفون)</label><input type="text" id="pUsdz" placeholder="models/margherita.usdz"></div>
+                    </div>
+                    <div class="grid-2">
+                        <div class="field">
+                            <label>نمایش سه‌بعدی / AR</label>
+                            <label class="ios-switch"><input type="checkbox" id="pAr"><span class="ios-switch-track"></span><span>فعال باشد</span></label>
+                        </div>
+                        <div class="field">
+                            <label>موجودی</label>
+                            <label class="ios-switch"><input type="checkbox" id="pAvail" checked><span class="ios-switch-track"></span><span>موجود است</span></label>
+                        </div>
+                    </div>
+                    <div class="row-actions">
+                        <button type="submit" class="btn btn-primary">ذخیره محصول</button>
+                        <button type="button" class="btn btn-glass" id="resetForm">فرم جدید</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel">
+                <h3>لیست محصولات</h3>
+                <div class="plist" id="prodList"></div>
+            </div>
+        </div>
+
+        <!-- ---- CATEGORIES ---- -->
+        <div class="pane" id="pane-cats">
+            <div class="panel">
+                <h3>افزودن دسته‌بندی</h3>
+                <form id="catForm">
+                    <div class="grid-2">
+                        <div class="field"><label>شناسه (انگلیسی) *</label><input type="text" id="cId" required placeholder="pizza" pattern="[a-z0-9_-]+"></div>
+                        <div class="field"><label>نام فارسی *</label><input type="text" id="cName" required placeholder="پیتزا"></div>
+                        <div class="field"><label>آیکون *</label><input type="text" id="cIcon" required placeholder="🍕"></div>
+                    </div>
+                    <div class="row-actions"><button type="submit" class="btn btn-primary">افزودن</button></div>
+                </form>
+            </div>
+            <div class="panel"><h3>دسته‌بندی‌های فعلی</h3><div class="plist" id="catList"></div></div>
+        </div>
+
+        <!-- ---- FAQ ---- -->
+        <div class="pane" id="pane-faq">
+            <div class="panel">
+                <h3>افزودن سوال</h3>
+                <form id="faqForm">
+                    <div class="field"><label>سوال *</label><input type="text" id="fQ" required placeholder="زمان تحویل چقدر است؟"></div>
+                    <div class="field"><label>پاسخ *</label><textarea id="fA" required placeholder="معمولاً بین ۳۰ تا ۴۵ دقیقه."></textarea></div>
+                    <div class="row-actions"><button type="submit" class="btn btn-primary">افزودن</button></div>
+                </form>
+            </div>
+            <div class="panel"><h3>سوالات فعلی</h3><div class="plist" id="faqList"></div></div>
+        </div>
+
+        <!-- ---- SETTINGS ---- -->
+        <div class="pane" id="pane-settings">
+            <div class="panel">
+                <h3>اطلاعات فروشگاه</h3>
+                <form id="setForm">
+                    <div class="grid-2">
+                        <div class="field"><label>شماره تماس</label><input type="tel" id="sPhone" placeholder="09140909878"></div>
+                        <div class="field"><label>واتس‌اپ</label><input type="tel" id="sWa" placeholder="09140909878"></div>
+                        <div class="field"><label>تلگرام</label><input type="tel" id="sTg" placeholder="09140909878"></div>
+                    </div>
+                    <div class="field"><label>درباره‌ی ما</label><textarea id="sAbout"></textarea></div>
+                    <div class="row-actions"><button type="submit" class="btn btn-primary">ذخیره</button></div>
+                </form>
+            </div>
+            <div class="panel">
+                <h3>راهنمای فایل‌های AR</h3>
+                <div class="hintbox">
+                    <p><b>۱.</b> مدل را با Luma AI یا Polycam بساز.</p>
+                    <p><b>۲.</b> خروجی <code>.glb</code> (اندروید/وب) و <code>.usdz</code> (آیفون) بگیر.</p>
+                    <p><b>۳.</b> فایل‌ها را در پوشه‌ی <code>models/</code> ریپو بگذار.</p>
+                    <p><b>۴.</b> مسیر را در فرم محصول وارد کن، مثلاً <code>models/pepperoni.glb</code>.</p>
+                    <p><b>۵.</b> برای Quick Look آیفون حتماً فایل USDZ لازم است — این محدودیت اپل است.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ---- GITHUB ---- -->
+        <div class="pane" id="pane-github">
+            <div class="panel">
+                <h3>اتصال به گیت‌هاب</h3>
+                <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:16px">
+                    تغییرات مستقیماً به‌صورت کامیت روی <code>data/store.json</code> ذخیره می‌شوند. توکن فقط در همین مرورگر ذخیره می‌شود.
+                </p>
+                <div class="grid-2">
+                    <div class="field"><label>مالک (owner)</label><input type="text" id="ghOwner" placeholder="pizzapibo"></div>
+                    <div class="field"><label>ریپو</label><input type="text" id="ghRepo" placeholder="pizzapibo"></div>
+                    <div class="field"><label>برنچ</label><input type="text" id="ghBranch" placeholder="main"></div>
+                    <div class="field"><label>توکن (repo scope)</label><input type="password" id="ghToken" placeholder="ghp_…"></div>
+                </div>
+                <div class="row-actions">
+                    <button class="btn btn-primary" id="ghSave">ذخیره تنظیمات</button>
+                    <button class="btn btn-glass" id="ghTest">تست اتصال</button>
+                    <button class="btn btn-glass" id="dlJson">دانلود store.json</button>
+                </div>
+                <p id="ghStatus" style="margin-top:12px;font-weight:800;font-size:.88rem"></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/store.js"></script>
+<script src="js/ios-glass.js"></script>
+<script src="js/admin.js"></script>
 </body>
 </html>

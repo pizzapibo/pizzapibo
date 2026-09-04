@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>مشاهده سه‌بعدی | PIBO</title>
+<meta name="theme-color" content="#FF5A1F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+
+<script type="module" src="https://unpkg.com/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+
+<style>
+    body { overflow: hidden; }
+
+    .ar-bar {
+        position: fixed;
+        top: 0; left: 0; right: 0;
+        z-index: 60;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: calc(12px + var(--safe-t)) 16px 12px;
+        background: linear-gradient(160deg, var(--cream), rgba(255,231,184,.85) 60%, rgba(255,180,0,.35));
+        border-bottom: 1px solid var(--line);
+        -webkit-backdrop-filter: var(--glass-blur);
+        backdrop-filter: var(--glass-blur);
+        box-shadow: var(--shadow-glass);
+    }
+    .ar-back {
+        width: 42px; height: 42px;
+        flex: 0 0 42px;
+        display: grid; place-items: center;
+        border-radius: 50%;
+        background: var(--glass-light-strong);
+        border: var(--glass-edge);
+        box-shadow: var(--shadow-glass);
+        font-size: 1.1rem;
+        transition: transform .34s var(--spring);
+    }
+    .ar-meta { flex: 1; min-width: 0; line-height: 1.35; }
+    .ar-name { font-weight: 900; font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ar-sub  { font-size: .8rem; color: var(--ink-soft); font-weight: 700; }
+    .ar-price {
+        padding: 7px 14px;
+        border-radius: var(--radius-pill);
+        background: var(--glass-light-strong);
+        border: var(--glass-edge);
+        box-shadow: var(--shadow-glass);
+        font-weight: 900;
+        font-size: .92rem;
+        white-space: nowrap;
+    }
+
+    .ar-stage {
+        position: fixed;
+        inset: 0;
+        padding-top: calc(66px + var(--safe-t));
+        padding-bottom: calc(110px + var(--safe-b));
+        background:
+            radial-gradient(60% 46% at 50% 34%, rgba(255,180,0,.30), transparent 66%),
+            radial-gradient(52% 44% at 50% 82%, rgba(255,90,31,.22), transparent 66%),
+            var(--white);
+    }
+    /* pizza watermark filling the empty space behind the model */
+    .ar-stage::before {
+        content: '🍕';
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: min(56vw, 380px);
+        opacity: .06;
+        pointer-events: none;
+        line-height: 1;
+    }
+    model-viewer {
+        position: relative;
+        width: 100%; height: 100%;
+        --poster-color: transparent;
+        --progress-bar-color: var(--orange);
+        background: transparent;
+    }
+
+    .ar-fallback {
+        position: absolute;
+        inset: 0;
+        display: grid;
+        place-content: center;
+        justify-items: center;
+        gap: 14px;
+        text-align: center;
+        padding: 26px;
+    }
+    .ar-fallback .fb-pizza {
+        font-size: 5rem;
+        line-height: 1;
+        animation: ar-float 2.6s ease-in-out infinite;
+    }
+    @keyframes ar-float {
+        0%, 100% { transform: translateY(0) rotate(-5deg); }
+        50%      { transform: translateY(-16px) rotate(5deg); }
+    }
+    .ar-fallback h2 { font-size: 1.15rem; font-weight: 900; }
+    .ar-fallback p { font-size: .92rem; color: var(--ink-soft); max-width: 340px; }
+
+    .ar-dock {
+        position: fixed;
+        left: 0; right: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 14px 16px calc(16px + var(--safe-b));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        background: linear-gradient(to top, var(--white) 40%, rgba(255,253,249,0));
+        pointer-events: none;
+    }
+    .ar-dock > * { pointer-events: auto; }
+
+    .ar-launch-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 9px;
+        width: min(100%, 420px);
+        padding: 16px 26px;
+        border-radius: var(--radius-pill);
+        background: linear-gradient(160deg, #FF8A52, var(--orange) 52%, var(--orange-dark));
+        color: #fff;
+        font-weight: 900;
+        font-size: 1rem;
+        box-shadow: 0 16px 36px -16px rgba(255,90,31,.9), var(--glass-highlight);
+        animation: ar-invite 2.4s var(--ease) infinite;
+        transition: transform .34s var(--spring);
+    }
+    .ar-launch-btn img { width: 0; height: 0; opacity: 0; }   /* Apple requires a real child img */
+    @keyframes ar-invite {
+        0%, 100% { box-shadow: 0 16px 36px -16px rgba(255,90,31,.9), 0 0 0 0 rgba(255,90,31,.42), var(--glass-highlight); }
+        55%      { box-shadow: 0 16px 36px -16px rgba(255,90,31,.9), 0 0 0 10px rgba(255,90,31,0), var(--glass-highlight); }
+    }
+
+    .ar-hint { font-size: .8rem; color: var(--ink-soft); font-weight: 700; text-align: center; }
+    .ar-secondary {
+        display: inline-flex;
+        gap: 9px;
+    }
+    .ar-secondary .btn { padding: 11px 18px; font-size: .88rem; }
+</style>
+</head>
+<body>
+
+<div class="ambient" aria-hidden="true"></div>
+
+<header class="ar-bar">
+    <a href="index.html#menu" class="ar-back" aria-label="بازگشت به منو">→</a>
+    <div class="ar-meta">
+        <div class="ar-name" id="arName">در حال بارگذاری…</div>
+        <div class="ar-sub" id="arSub">نمایش سه‌بعدی و واقعیت‌افزوده</div>
+    </div>
+    <div class="ar-price" id="arPrice"></div>
+</header>
+
+<div class="ar-stage" id="arStage">
+    <div class="ar-fallback" id="arFallback">
+        <div class="fb-pizza">🍕</div>
+        <h2 id="fbTitle">در حال آماده‌سازی مدل…</h2>
+        <p id="fbText">چند لحظه صبر کن.</p>
+    </div>
+</div>
+
+<div class="ar-dock" id="arDock"></div>
+
+<script src="js/store.js"></script>
+<script src="js/ios-glass.js"></script>
+<script src="js/vpn-hint.js"></script>
+<script>
+(function () {
+    const $ = s => document.querySelector(s);
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+
+    const ua = navigator.userAgent;
+    const isIOS = /iPad|iPhone|iPod/.test(ua) ||
+                  (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isAndroid = /Android/.test(ua);
+
+    function fallback(title, text) {
+        const fb = $('#arFallback');
+        if (!fb) return;
+        fb.style.display = 'grid';
+        $('#fbTitle').textContent = title;
+        $('#fbText').textContent = text;
+    }
+
+    function buildDock(p) {
+        const dock = $('#arDock');
+        const glb  = p.modelGLB || '';
+        const usdz = p.modelUSDZ || '';
+        dock.innerHTML = '';
+
+        // ---- iOS: Quick Look. rel="ar" + a REAL visible <img> child is required
+        //      by Apple, otherwise Safari navigates away instead of overlaying.
+        if (isIOS && usdz) {
+            const a = document.createElement('a');
+            a.className = 'ar-launch-btn';
+            a.setAttribute('rel', 'ar');
+            a.href = usdz;
+            const img = document.createElement('img');
+            img.src = p.image || '';
+            img.alt = p.name || '';
+            a.appendChild(img);
+            a.appendChild(document.createTextNode('🥽 مشاهده در فضای واقعی (AR)'));
+            dock.appendChild(a);
+        }
+        // ---- Android: Scene Viewer via intent, ar_only goes straight to camera
+        else if (isAndroid && glb) {
+            const abs = new URL(glb, location.href).href;
+            const a = document.createElement('a');
+            a.className = 'ar-launch-btn';
+            a.href = 'intent://arvr.google.com/scene-viewer/1.0?file=' + encodeURIComponent(abs) +
+                     '&mode=ar_only&title=' + encodeURIComponent(p.name || 'PIBO') +
+                     '#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;' +
+                     'S.browser_fallback_url=' + encodeURIComponent(location.href) + ';end;';
+            a.textContent = '🥽 مشاهده در فضای واقعی (AR)';
+            dock.appendChild(a);
+        }
+        // ---- Desktop / no AR asset for this OS
+        else {
+            const hint = document.createElement('div');
+            hint.className = 'ar-hint';
+            hint.textContent = isIOS
+                ? 'برای این محصول فایل AR مخصوص آیفون ثبت نشده است.'
+                : (glb || usdz)
+                    ? 'برای تجربه‌ی واقعیت‌افزوده، این صفحه را روی گوشی باز کن.'
+                    : 'برای این محصول هنوز مدل سه‌بعدی ثبت نشده است.';
+            dock.appendChild(hint);
+        }
+
+        const sec = document.createElement('div');
+        sec.className = 'ar-secondary';
+        sec.innerHTML = '<a class="btn btn-glass" href="index.html#menu">بازگشت به منو</a>';
+        dock.appendChild(sec);
+    }
+
+    function mountViewer(p) {
+        const glb = p.modelGLB || '';
+        const usdz = p.modelUSDZ || '';
+        const stage = $('#arStage');
+
+        if (!glb && !usdz) {
+            fallback('مدل سه‌بعدی موجود نیست', 'برای این محصول هنوز فایل ۳D بارگذاری نشده است.');
+            return;
+        }
+        if (!glb) {
+            // iOS-only asset: no inline preview possible, but Quick Look still works
+            fallback('پیش‌نمایش داخل صفحه در دسترس نیست', 'ولی می‌توانی با دکمه‌ی پایین، پیتزا را در فضای واقعی ببینی.');
+            return;
+        }
+
+        const mv = document.createElement('model-viewer');
+        mv.setAttribute('src', glb);
+        if (usdz) mv.setAttribute('ios-src', usdz);
+        mv.setAttribute('alt', p.name || 'مدل سه‌بعدی پیتزا');
+        mv.setAttribute('camera-controls', '');
+        mv.setAttribute('auto-rotate', '');
+        mv.setAttribute('touch-action', 'pan-y');
+        mv.setAttribute('shadow-intensity', '1');
+        mv.setAttribute('exposure', '1');
+        mv.setAttribute('environment-image', 'neutral');
+        mv.setAttribute('loading', 'eager');
+
+        mv.addEventListener('load', () => { $('#arFallback').style.display = 'none'; });
+        mv.addEventListener('error', () => {
+            mv.remove();
+            fallback('پیش‌نمایش لود نشد', 'ولی دکمه‌ی واقعیت‌افزوده همچنان کار می‌کند.');
+        });
+
+        stage.appendChild(mv);
+    }
+
+    (async function init() {
+        try { await PIBO.loadStore(); }
+        catch (e) {
+            $('#arName').textContent = 'خطا در بارگذاری';
+            fallback('منو بارگذاری نشد', 'اتصال اینترنت را بررسی کن.');
+            return;
+        }
+
+        const p = PIBO.findProduct(id);
+        if (!p) {
+            $('#arName').textContent = 'محصول پیدا نشد';
+            $('#arPrice').style.display = 'none';
+            fallback('این محصول وجود ندارد', 'به منو برگرد و دوباره انتخاب کن.');
+            $('#arDock').innerHTML = '<a class="btn btn-primary" href="index.html#menu">بازگشت به منو</a>';
+            return;
+        }
+
+        document.title = p.name + ' | مشاهده سه‌بعدی PIBO';
+        $('#arName').textContent = p.name;
+        $('#arSub').textContent = p.size ? p.size + ' · نمایش سه‌بعدی' : 'نمایش سه‌بعدی و واقعیت‌افزوده';
+        $('#arPrice').textContent = PIBO.fmt(p.price) + ' تومان';
+
+        mountViewer(p);
+        buildDock(p);
+    })();
+})();
+</script>
+</body>
+</html>

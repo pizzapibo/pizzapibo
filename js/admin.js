@@ -1,505 +1,412 @@
-// Pibo Admin Panel
+/* =====================================================================
+   PIBO · admin.js
+   Edits data/store.json in memory, publishes it to GitHub as a commit.
+   No backend. Password gate is sessionStorage-based (obscurity, not security —
+   the real gate is the GitHub token, which never leaves this browser).
+   ===================================================================== */
+(function () {
+    const $  = s => document.querySelector(s);
+    const $$ = s => Array.from(document.querySelectorAll(s));
 
-// ==================== SECURITY ====================
-const ADMIN_PASSWORD_HASH = 'Arshiakamali2898'; // In production, use proper hashing
-let isAuthenticated = sessionStorage.getItem('pibo_admin_auth') === 'true';
+    const PASS = 'Arshiakamali2898';
+    const SESS = 'pibo_admin_ok';
+    const GH_KEY = 'pibo_gh_cfg_v1';
 
-// ==================== DOM ELEMENTS ====================
-const loginScreen = document.getElementById('login-screen');
-const adminPanel = document.getElementById('admin-panel');
-const loginForm = document.getElementById('login-form');
-const passwordInput = document.getElementById('admin-password');
-const loginError = document.getElementById('login-error');
+    let data = { settings: {}, products: [], faq: [] };
+    let editingId = null;
 
-// ==================== INITIALIZATION ====================
-document.addEventListener('DOMContentLoaded', () => {
-    if (isAuthenticated) {
-        showAdminPanel();
-    } else {
-        showLoginScreen();
+    /* ---------------- toast ---------------- */
+    let tTimer;
+    function toast(msg, type) {
+        const old = $('.toast'); if (old) old.remove();
+        clearTimeout(tTimer);
+        const t = document.createElement('div');
+        t.className = 'toast' + (type === 'error' ? ' err' : '');
+        t.innerHTML = `<span class="toast-ico">${type === 'error' ? '!' : '✓'}</span><span></span>`;
+        t.lastElementChild.textContent = msg;
+        document.body.appendChild(t);
+        requestAnimationFrame(() => t.classList.add('show'));
+        tTimer = setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 450); }, 2800);
     }
 
-    if (loginForm) {
-        loginForm.addEventListener('submit', handleLogin);
+    /* ---------------- auth ---------------- */
+    function unlock() {
+        $('#authScreen').style.display = 'none';
+        $('#adminShell').style.display = 'block';
+        boot();
     }
 
-    // Tab switching
-    document.querySelectorAll('.admin-tab').forEach(tab => {
-        tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+    $('#authForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const val = $('#authPass').value;
+        if (val === PASS) {
+            try { sessionStorage.setItem(SESS, '1'); } catch (err) {}
+            unlock();
+        } else {
+            $('#authErr').textContent = 'رمز عبور اشتباه است';
+            $('#authPass').value = '';
+            (window.pibo_shake || (() => {}))($('#authCard'));
+        }
     });
 
-    // Setup forms
-    setupProductForm();
-    setupCategoryForm();
-    setupSettingsForm();
+    $('#logoutBtn').addEventListener('click', () => {
+        try { sessionStorage.removeItem(SESS); } catch (e) {}
+        location.reload();
+    });
 
-    // Load initial data
-    loadAdminData();
-});
+    try { if (sessionStorage.getItem(SESS) === '1') unlock(); } catch (e) {}
 
-function handleLogin(e) {
-    e.preventDefault();
-    const password = passwordInput.value;
-
-    if (password === ADMIN_PASSWORD_HASH) {
-        isAuthenticated = true;
-        sessionStorage.setItem('pibo_admin_auth', 'true');
-        showAdminPanel();
-        loadAdminData();
-    } else {
-        loginError.textContent = 'رمز عبور اشتباه است!';
-        passwordInput.value = '';
-        passwordInput.focus();
-
-        // Shake animation
-        loginScreen.querySelector('.login-box').style.animation = 'shake 0.5s';
-        setTimeout(() => {
-            loginScreen.querySelector('.login-box').style.animation = '';
-        }, 500);
-    }
-}
-
-function showLoginScreen() {
-    if (loginScreen) loginScreen.style.display = 'flex';
-    if (adminPanel) adminPanel.style.display = 'none';
-}
-
-function showAdminPanel() {
-    if (loginScreen) loginScreen.style.display = 'none';
-    if (adminPanel) adminPanel.style.display = 'block';
-}
-
-function logout() {
-    isAuthenticated = false;
-    sessionStorage.removeItem('pibo_admin_auth');
-    showLoginScreen();
-}
-
-// ==================== TAB SWITCHING ====================
-function switchTab(tabId) {
-    document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.admin-tab-content').forEach(c => c.classList.remove('active'));
-
-    document.querySelector(`.admin-tab[data-tab="${tabId}"]`)?.classList.add('active');
-    document.getElementById(`tab-${tabId}`)?.classList.add('active');
-
-    // Refresh data for specific tabs
-    if (tabId === 'orders') loadOrders();
-    if (tabId === 'dashboard') loadDashboardStats();
-}
-
-// ==================== DATA LOADING ====================
-let adminProducts = [];
-let adminCategories = [];
-let adminOrders = [];
-let adminSettings = {};
-
-async function loadAdminData() {
-    await Promise.all([
-        loadAdminProducts(),
-        loadAdminCategories(),
-        loadAdminSettings(),
-        loadOrders(),
-        loadDashboardStats()
-    ]);
-}
-
-async function loadAdminProducts() {
-    try {
-        const snapshot = await db.ref('products').once('value');
-        const data = snapshot.val() || {};
-        adminProducts = Object.entries(data).map(([id, p]) => ({ id, ...p }));
-        renderAdminProducts();
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-async function loadAdminCategories() {
-    try {
-        const snapshot = await db.ref('categories').once('value');
-        const data = snapshot.val() || {};
-        adminCategories = Object.entries(data).map(([id, c]) => ({ id, ...c }));
-        renderAdminCategories();
-        updateCategorySelect();
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-async function loadAdminSettings() {
-    try {
-        const snapshot = await db.ref('settings').once('value');
-        adminSettings = snapshot.val() || {};
-        fillSettingsForm();
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-async function loadOrders() {
-    try {
-        const snapshot = await db.ref('orders').once('value');
-        const data = snapshot.val() || {};
-        adminOrders = Object.entries(data).map(([id, o]) => ({ id, ...o })).sort((a, b) => b.timestamp - a.timestamp);
-        renderOrders();
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-async function loadDashboardStats() {
-    try {
-        const productsSnap = await db.ref('products').once('value');
-        const ordersSnap = await db.ref('orders').once('value');
-
-        const productsCount = productsSnap.numChildren();
-        const ordersData = ordersSnap.val() || {};
-        const ordersList = Object.values(ordersData);
-
-        const totalRevenue = ordersList.reduce((sum, o) => sum + (o.total || 0), 0);
-        const pendingOrders = ordersList.filter(o => o.status === 'pending').length;
-        const completedOrders = ordersList.filter(o => o.status === 'completed').length;
-
-        document.getElementById('stat-products').textContent = productsCount;
-        document.getElementById('stat-orders').textContent = ordersList.length;
-        document.getElementById('stat-revenue').textContent = formatPrice(totalRevenue) + ' تومان';
-        document.getElementById('stat-pending').textContent = pendingOrders;
-    } catch (e) {
-        console.error(e);
-    }
-}
-
-// ==================== PRODUCTS MANAGEMENT ====================
-function renderAdminProducts() {
-    const container = document.getElementById('admin-products-list');
-    if (!container) return;
-
-    if (adminProducts.length === 0) {
-        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #888;">محصولی وجود ندارد</p>';
-        return;
-    }
-
-    container.innerHTML = adminProducts.map(prod => `
-        <div class="admin-item">
-            <img src="${prod.image}" alt="${prod.name}" class="admin-item-img">
-            <div class="admin-item-info">
-                <h4>${prod.name}</h4>
-                <p>${getCategoryName(prod.category)} | ${formatPrice(prod.price)} تومان</p>
-                <span class="badge ${prod.available ? 'badge-success' : 'badge-danger'}">
-                    ${prod.available ? 'فعال' : 'غیرفعال'}
-                </span>
-            </div>
-            <div class="admin-item-actions">
-                <button class="btn-icon btn-edit" onclick="editProduct('${prod.id}')">✏️</button>
-                <button class="btn-icon btn-delete" onclick="deleteProduct('${prod.id}')">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function setupProductForm() {
-    const form = document.getElementById('product-form');
-    const cancelBtn = document.getElementById('cancel-product');
-
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const id = document.getElementById('product-id').value;
-            const product = {
-                name: document.getElementById('prod-name').value,
-                description: document.getElementById('prod-desc').value,
-                price: parseInt(document.getElementById('prod-price').value),
-                category: document.getElementById('prod-category').value,
-                image: document.getElementById('prod-image').value,
-                modelGLB: document.getElementById('prod-glb').value,
-                modelUSDZ: document.getElementById('prod-usdz').value,
-                badge: document.getElementById('prod-badge').value,
-                available: document.getElementById('prod-available').checked
-            };
-
-            try {
-                if (id) {
-                    await db.ref(`products/${id}`).update(product);
-                    showAdminToast('محصول با موفقیت بروزرسانی شد');
-                } else {
-                    await db.ref('products').push(product);
-                    showAdminToast('محصول جدید اضافه شد');
-                }
-
-                resetProductForm();
-                loadAdminProducts();
-            } catch (err) {
-                showAdminToast('خطا در ذخیره محصول', 'error');
-            }
+    /* ---------------- tabs ---------------- */
+    $$('.admin-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            $$('.admin-tab').forEach(t => t.classList.remove('active'));
+            $$('.pane').forEach(p => p.classList.remove('active'));
+            tab.classList.add('active');
+            $('#pane-' + tab.dataset.pane).classList.add('active');
         });
+    });
+
+    /* ---------------- render ---------------- */
+    function fa(n) { return String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]); }
+    function money(n) { return Number(n || 0).toLocaleString('fa-IR'); }
+
+    function catName(id) {
+        const c = (data.settings.categories || []).find(c => c.id === id);
+        return c ? c.name : id;
     }
 
-    if (cancelBtn) {
-        cancelBtn.addEventListener('click', resetProductForm);
-    }
-}
-
-function editProduct(id) {
-    const product = adminProducts.find(p => p.id === id);
-    if (!product) return;
-
-    document.getElementById('product-id').value = id;
-    document.getElementById('prod-name').value = product.name;
-    document.getElementById('prod-desc').value = product.description || '';
-    document.getElementById('prod-price').value = product.price;
-    document.getElementById('prod-category').value = product.category;
-    document.getElementById('prod-image').value = product.image;
-    document.getElementById('prod-glb').value = product.modelGLB || '';
-    document.getElementById('prod-usdz').value = product.modelUSDZ || '';
-    document.getElementById('prod-badge').value = product.badge || '';
-    document.getElementById('prod-available').checked = product.available !== false;
-
-    document.getElementById('product-form-title').textContent = 'ویرایش محصول';
-    document.getElementById('product-form').scrollIntoView({ behavior: 'smooth' });
-}
-
-async function deleteProduct(id) {
-    if (!confirm('آیا از حذف این محصول اطمینان دارید؟')) return;
-
-    try {
-        await db.ref(`products/${id}`).remove();
-        showAdminToast('محصول حذف شد');
-        loadAdminProducts();
-    } catch (err) {
-        showAdminToast('خطا در حذف محصول', 'error');
-    }
-}
-
-function resetProductForm() {
-    document.getElementById('product-form').reset();
-    document.getElementById('product-id').value = '';
-    document.getElementById('product-form-title').textContent = 'افزودن محصول جدید';
-    document.getElementById('prod-available').checked = true;
-}
-
-// ==================== CATEGORIES MANAGEMENT ====================
-function renderAdminCategories() {
-    const container = document.getElementById('admin-categories-list');
-    if (!container) return;
-
-    container.innerHTML = adminCategories.map(cat => `
-        <div class="admin-item">
-            <div class="admin-item-icon">${cat.icon}</div>
-            <div class="admin-item-info">
-                <h4>${cat.name}</h4>
-                <p>شناسه: ${cat.id}</p>
-            </div>
-            <div class="admin-item-actions">
-                <button class="btn-icon btn-edit" onclick="editCategory('${cat.id}')">✏️</button>
-                <button class="btn-icon btn-delete" onclick="deleteCategory('${cat.id}')">🗑️</button>
-            </div>
-        </div>
-    `).join('');
-}
-
-function updateCategorySelect() {
-    const select = document.getElementById('prod-category');
-    if (!select) return;
-
-    select.innerHTML = adminCategories.map(cat => 
-        `<option value="${cat.id}">${cat.name}</option>`
-    ).join('');
-}
-
-function setupCategoryForm() {
-    const form = document.getElementById('category-form');
-
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const id = document.getElementById('cat-id').value.trim();
-            const name = document.getElementById('cat-name').value.trim();
-            const icon = document.getElementById('cat-icon').value.trim();
-
-            if (!id || !name) {
-                showAdminToast('لطفاً همه فیلدها را پر کنید', 'error');
-                return;
-            }
-
-            try {
-                await db.ref(`categories/${id}`).set({ name, icon });
-                showAdminToast('دسته‌بندی ذخیره شد');
-                document.getElementById('category-form').reset();
-                loadAdminCategories();
-            } catch (err) {
-                showAdminToast('خطا در ذخیره دسته‌بندی', 'error');
-            }
-        });
-    }
-}
-
-async function deleteCategory(id) {
-    if (!confirm('آیا از حذف این دسته‌بندی اطمینان دارید؟')) return;
-
-    try {
-        await db.ref(`categories/${id}`).remove();
-        showAdminToast('دسته‌بندی حذف شد');
-        loadAdminCategories();
-    } catch (err) {
-        showAdminToast('خطا در حذف دسته‌بندی', 'error');
-    }
-}
-
-function editCategory(id) {
-    const cat = adminCategories.find(c => c.id === id);
-    if (!cat) return;
-
-    document.getElementById('cat-id').value = cat.id;
-    document.getElementById('cat-name').value = cat.name;
-    document.getElementById('cat-icon').value = cat.icon;
-}
-
-// ==================== ORDERS MANAGEMENT ====================
-function renderOrders() {
-    const container = document.getElementById('admin-orders-list');
-    if (!container) return;
-
-    if (adminOrders.length === 0) {
-        container.innerHTML = '<p style="text-align: center; padding: 40px; color: #888;">سفارشی وجود ندارد</p>';
-        return;
+    function renderStats() {
+        $('#stProducts').textContent = fa(data.products.length);
+        $('#stCats').textContent     = fa((data.settings.categories || []).length);
+        $('#stAR').textContent       = fa(data.products.filter(p => p.ar && (p.modelGLB || p.modelUSDZ)).length);
+        $('#stOut').textContent      = fa(data.products.filter(p => p.available === false).length);
     }
 
-    container.innerHTML = adminOrders.map(order => {
-        const date = new Date(order.timestamp).toLocaleString('fa-IR');
-        const statusClass = order.status === 'completed' ? 'badge-success' : 
-                           order.status === 'cancelled' ? 'badge-danger' : 'badge-warning';
-        const statusText = order.status === 'completed' ? 'تکمیل شده' : 
-                          order.status === 'cancelled' ? 'لغو شده' : 'در انتظار';
+    function renderCatSelect() {
+        const sel = $('#pCat');
+        sel.innerHTML = (data.settings.categories || [])
+            .map(c => `<option value="${c.id}">${c.icon || ''} ${c.name}</option>`).join('');
+    }
 
-        return `
-            <div class="admin-order-card">
-                <div class="order-header">
-                    <div>
-                        <strong>سفارش #${order.id.slice(-6)}</strong>
-                        <span class="badge ${statusClass}">${statusText}</span>
+    function renderProducts() {
+        const list = $('#prodList');
+        if (!data.products.length) {
+            list.innerHTML = '<p style="color:var(--ink-soft);padding:14px 0">هنوز محصولی ثبت نشده.</p>';
+            return;
+        }
+        list.innerHTML = data.products.map((p, i) => `
+            <div class="pitem">
+                <img src="${p.image || ''}" alt="" loading="lazy">
+                <div class="pi-info">
+                    <b>${p.name}</b>
+                    <span>${catName(p.category)} · ${money(p.price)} تومان</span>
+                </div>
+                <span class="pill ${p.available === false ? 'off' : 'ok'}">${p.available === false ? 'تمام' : 'موجود'}</span>
+                ${p.ar && (p.modelGLB || p.modelUSDZ) ? '<span class="pill ok">AR</span>' : ''}
+                <div class="pi-tools">
+                    <button class="btn-icon" data-up="${i}"   aria-label="بالا">↑</button>
+                    <button class="btn-icon" data-down="${i}" aria-label="پایین">↓</button>
+                    <button class="btn-icon" data-edit="${p.id}" aria-label="ویرایش">✏️</button>
+                    <button class="btn-icon danger" data-del="${p.id}" aria-label="حذف">🗑️</button>
+                </div>
+            </div>`).join('');
+    }
+
+    function renderCats() {
+        const list = $('#catList');
+        const cats = data.settings.categories || [];
+        list.innerHTML = cats.length
+            ? cats.map((c, i) => `
+                <div class="pitem">
+                    <div style="width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;border-radius:13px;background:var(--cream);font-size:1.5rem">${c.icon || '🍽️'}</div>
+                    <div class="pi-info"><b>${c.name}</b><span>${c.id} · ${fa(data.products.filter(p => p.category === c.id).length)} محصول</span></div>
+                    <div class="pi-tools">
+                        <button class="btn-icon" data-cup="${i}" aria-label="بالا">↑</button>
+                        <button class="btn-icon" data-cdown="${i}" aria-label="پایین">↓</button>
+                        <button class="btn-icon danger" data-cdel="${c.id}" aria-label="حذف">🗑️</button>
                     </div>
-                    <span style="color: #888; font-size: 0.85rem;">${date}</span>
-                </div>
-                <div class="order-customer">
-                    <p><strong>نام:</strong> ${order.customer?.name || '-'}</p>
-                    <p><strong>تلفن:</strong> ${order.customer?.phone || '-'}</p>
-                    <p><strong>آدرس:</strong> ${order.customer?.address || '-'}</p>
-                    ${order.customer?.notes ? `<p><strong>توضیحات:</strong> ${order.customer.notes}</p>` : ''}
-                </div>
-                <div class="order-items">
-                    ${order.items?.map(item => `
-                        <div class="order-item-row">
-                            <span>${item.name} x${item.qty}</span>
-                            <span>${formatPrice(item.price * item.qty)} تومان</span>
-                        </div>
-                    `).join('') || ''}
-                </div>
-                <div class="order-footer">
-                    <strong>جمع: ${formatPrice(order.total)} تومان</strong>
-                    <div class="order-actions">
-                        ${order.status === 'pending' ? `
-                            <button class="btn btn-sm btn-success" onclick="updateOrderStatus('${order.id}', 'completed')">✓ تکمیل</button>
-                            <button class="btn btn-sm btn-danger" onclick="updateOrderStatus('${order.id}', 'cancelled')">✕ لغو</button>
-                        ` : ''}
-                        <button class="btn btn-sm btn-secondary" onclick="deleteOrder('${order.id}')">🗑️ حذف</button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-async function updateOrderStatus(id, status) {
-    try {
-        await db.ref(`orders/${id}/status`).set(status);
-        showAdminToast(`وضعیت سفارش ${status === 'completed' ? 'تکمیل' : 'لغو'} شد`);
-        loadOrders();
-        loadDashboardStats();
-    } catch (err) {
-        showAdminToast('خطا در بروزرسانی وضعیت', 'error');
+                </div>`).join('')
+            : '<p style="color:var(--ink-soft);padding:14px 0">دسته‌بندی‌ای وجود ندارد.</p>';
     }
-}
 
-async function deleteOrder(id) {
-    if (!confirm('آیا از حذف این سفارش اطمینان دارید؟')) return;
-
-    try {
-        await db.ref(`orders/${id}`).remove();
-        showAdminToast('سفارش حذف شد');
-        loadOrders();
-        loadDashboardStats();
-    } catch (err) {
-        showAdminToast('خطا در حذف سفارش', 'error');
+    function renderFaq() {
+        const list = $('#faqList');
+        list.innerHTML = data.faq.length
+            ? data.faq.map((f, i) => `
+                <div class="pitem">
+                    <div class="pi-info"><b>${f.q}</b><span>${f.a}</span></div>
+                    <div class="pi-tools"><button class="btn-icon danger" data-fdel="${i}" aria-label="حذف">🗑️</button></div>
+                </div>`).join('')
+            : '<p style="color:var(--ink-soft);padding:14px 0">سوالی ثبت نشده.</p>';
     }
-}
 
-// ==================== SETTINGS ====================
-function fillSettingsForm() {
-    document.getElementById('set-phone').value = adminSettings.phone || '09140909878';
-    document.getElementById('set-whatsapp').value = adminSettings.whatsapp || '09140909878';
-    document.getElementById('set-telegram').value = adminSettings.telegram || '09140909878';
-    document.getElementById('set-about').value = adminSettings.about || '';
-    document.getElementById('set-qr').value = adminSettings.qrCode || '';
-}
+    function renderSettings() {
+        const s = data.settings;
+        $('#sPhone').value = s.phone || '';
+        $('#sWa').value    = s.whatsapp || '';
+        $('#sTg').value    = s.telegram || '';
+        $('#sAbout').value = s.about || '';
+    }
 
-function setupSettingsForm() {
-    const form = document.getElementById('settings-form');
+    function renderAll() {
+        renderStats(); renderCatSelect(); renderProducts(); renderCats(); renderFaq();
+    }
 
-    if (form) {
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    /* ---------------- product form ---------------- */
+    function resetForm() {
+        editingId = null;
+        $('#formTitle').textContent = 'افزودن محصول';
+        $('#prodForm').reset();
+        $('#pId').value = '';
+        $('#pAvail').checked = true;
+        $('#pAr').checked = false;
+    }
+    $('#resetForm').addEventListener('click', resetForm);
 
-            const settings = {
-                phone: document.getElementById('set-phone').value,
-                whatsapp: document.getElementById('set-whatsapp').value,
-                telegram: document.getElementById('set-telegram').value,
-                about: document.getElementById('set-about').value,
-                qrCode: document.getElementById('set-qr').value
-            };
+    $('#prodForm').addEventListener('submit', e => {
+        e.preventDefault();
+        const p = {
+            id:          $('#pId').value || 'p' + Date.now().toString(36),
+            name:        $('#pName').value.trim(),
+            description: $('#pDesc').value.trim(),
+            price:       Number($('#pPrice').value) || 0,
+            category:    $('#pCat').value,
+            size:        $('#pSize').value.trim(),
+            image:       $('#pImage').value.trim(),
+            badge:       $('#pBadge').value.trim(),
+            available:   $('#pAvail').checked,
+            ar:          $('#pAr').checked,
+            modelGLB:    $('#pGlb').value.trim(),
+            modelUSDZ:   $('#pUsdz').value.trim()
+        };
 
-            try {
-                await db.ref('settings').set(settings);
-                showAdminToast('تنظیمات با موفقیت ذخیره شد');
-            } catch (err) {
-                showAdminToast('خطا در ذخیره تنظیمات', 'error');
+        if (!p.category) { toast('اول یک دسته‌بندی بساز', 'error'); return; }
+
+        const idx = data.products.findIndex(x => x.id === p.id);
+        if (idx >= 0) data.products[idx] = p;
+        else data.products.push(p);
+
+        resetForm();
+        renderAll();
+        toast('ذخیره شد — یادت نرود «انتشار روی گیت‌هاب» را بزنی');
+    });
+
+    $('#prodList').addEventListener('click', e => {
+        const ed = e.target.closest('[data-edit]');
+        const dl = e.target.closest('[data-del]');
+        const up = e.target.closest('[data-up]');
+        const dn = e.target.closest('[data-down]');
+
+        if (ed) {
+            const p = data.products.find(x => x.id === ed.dataset.edit);
+            if (!p) return;
+            editingId = p.id;
+            $('#formTitle').textContent = 'ویرایش: ' + p.name;
+            $('#pId').value = p.id;
+            $('#pName').value = p.name || '';
+            $('#pDesc').value = p.description || '';
+            $('#pPrice').value = p.price || 0;
+            $('#pCat').value = p.category || '';
+            $('#pSize').value = p.size || '';
+            $('#pImage').value = p.image || '';
+            $('#pBadge').value = p.badge || '';
+            $('#pGlb').value = p.modelGLB || '';
+            $('#pUsdz').value = p.modelUSDZ || '';
+            $('#pAvail').checked = p.available !== false;
+            $('#pAr').checked = !!p.ar;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        if (dl) {
+            const p = data.products.find(x => x.id === dl.dataset.del);
+            if (p && confirm(`«${p.name}» حذف شود؟`)) {
+                data.products = data.products.filter(x => x.id !== dl.dataset.del);
+                renderAll(); toast('حذف شد');
             }
-        });
+        }
+        if (up) {
+            const i = +up.dataset.up;
+            if (i > 0) { [data.products[i - 1], data.products[i]] = [data.products[i], data.products[i - 1]]; renderProducts(); }
+        }
+        if (dn) {
+            const i = +dn.dataset.down;
+            if (i < data.products.length - 1) { [data.products[i + 1], data.products[i]] = [data.products[i], data.products[i + 1]]; renderProducts(); }
+        }
+    });
+
+    /* ---------------- categories ---------------- */
+    $('#catForm').addEventListener('submit', e => {
+        e.preventDefault();
+        data.settings.categories = data.settings.categories || [];
+        const id = $('#cId').value.trim().toLowerCase();
+        if (data.settings.categories.some(c => c.id === id)) { toast('این شناسه قبلاً ثبت شده', 'error'); return; }
+        data.settings.categories.push({ id, name: $('#cName').value.trim(), icon: $('#cIcon').value.trim() });
+        $('#catForm').reset();
+        renderAll();
+        toast('دسته‌بندی اضافه شد');
+    });
+
+    $('#catList').addEventListener('click', e => {
+        const del = e.target.closest('[data-cdel]');
+        const up  = e.target.closest('[data-cup]');
+        const dn  = e.target.closest('[data-cdown]');
+        const cats = data.settings.categories || [];
+
+        if (del) {
+            const id = del.dataset.cdel;
+            const n = data.products.filter(p => p.category === id).length;
+            if (n) { toast(`اول ${fa(n)} محصول این دسته را جابه‌جا کن`, 'error'); return; }
+            data.settings.categories = cats.filter(c => c.id !== id);
+            renderAll(); toast('حذف شد');
+        }
+        if (up)  { const i = +up.dataset.cup;   if (i > 0) { [cats[i-1], cats[i]] = [cats[i], cats[i-1]]; renderCats(); renderCatSelect(); } }
+        if (dn)  { const i = +dn.dataset.cdown; if (i < cats.length - 1) { [cats[i+1], cats[i]] = [cats[i], cats[i+1]]; renderCats(); renderCatSelect(); } }
+    });
+
+    /* ---------------- faq ---------------- */
+    $('#faqForm').addEventListener('submit', e => {
+        e.preventDefault();
+        data.faq.push({ q: $('#fQ').value.trim(), a: $('#fA').value.trim() });
+        $('#faqForm').reset(); renderFaq(); toast('سوال اضافه شد');
+    });
+    $('#faqList').addEventListener('click', e => {
+        const d = e.target.closest('[data-fdel]');
+        if (d) { data.faq.splice(+d.dataset.fdel, 1); renderFaq(); toast('حذف شد'); }
+    });
+
+    /* ---------------- settings ---------------- */
+    $('#setForm').addEventListener('submit', e => {
+        e.preventDefault();
+        data.settings.phone    = $('#sPhone').value.trim();
+        data.settings.whatsapp = $('#sWa').value.trim();
+        data.settings.telegram = $('#sTg').value.trim();
+        data.settings.about    = $('#sAbout').value.trim();
+        toast('ذخیره شد — برای اعمال، «انتشار» را بزن');
+    });
+
+    /* ---------------- github ---------------- */
+    function ghCfg() {
+        try { return JSON.parse(localStorage.getItem(GH_KEY)) || {}; } catch (e) { return {}; }
     }
-}
+    function loadGhForm() {
+        const c = ghCfg();
+        $('#ghOwner').value  = c.owner  || 'pizzapibo';
+        $('#ghRepo').value   = c.repo   || 'pizzapibo';
+        $('#ghBranch').value = c.branch || 'main';
+        $('#ghToken').value  = c.token  || '';
+    }
+    $('#ghSave').addEventListener('click', () => {
+        const cfg = {
+            owner:  $('#ghOwner').value.trim(),
+            repo:   $('#ghRepo').value.trim(),
+            branch: $('#ghBranch').value.trim() || 'main',
+            token:  $('#ghToken').value.trim()
+        };
+        try { localStorage.setItem(GH_KEY, JSON.stringify(cfg)); } catch (e) {}
+        toast('تنظیمات ذخیره شد');
+    });
 
-// ==================== UTILITIES ====================
-function formatPrice(price) {
-    return price?.toLocaleString('fa-IR') || '0';
-}
+    function ghHeaders(token) {
+        return {
+            'Authorization': 'Bearer ' + token,
+            'Accept': 'application/vnd.github+json',
+            'X-GitHub-Api-Version': '2022-11-28'
+        };
+    }
 
-function getCategoryName(catId) {
-    const cat = adminCategories.find(c => c.id === catId);
-    return cat ? cat.name : catId;
-}
+    $('#ghTest').addEventListener('click', async () => {
+        const c = ghCfg();
+        const st = $('#ghStatus');
+        if (!c.token || !c.owner || !c.repo) { st.textContent = '⚠️ اول تنظیمات را کامل و ذخیره کن.'; return; }
+        st.textContent = '⏳ در حال تست…';
+        try {
+            const r = await fetch(`https://api.github.com/repos/${c.owner}/${c.repo}`, { headers: ghHeaders(c.token) });
+            st.textContent = r.ok ? '✅ اتصال برقرار است.' : `❌ خطا: ${r.status} — توکن یا نام ریپو را بررسی کن.`;
+        } catch (e) { st.textContent = '❌ خطای شبکه — شاید نیاز به VPN باشد.'; }
+    });
 
-function showAdminToast(message, type = 'success') {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        top: 30px;
-        left: 30px;
-        background: ${type === 'success' ? '#22C55E' : '#EF4444'};
-        color: white;
-        padding: 15px 25px;
-        border-radius: 12px;
-        z-index: 9999;
-        font-weight: 600;
-        animation: slideIn 0.3s ease;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.2);
-    `;
-    toast.textContent = message;
-    document.body.appendChild(toast);
+    /* base64 that survives Persian text */
+    function b64(str) {
+        const bytes = new TextEncoder().encode(str);
+        let bin = '';
+        bytes.forEach(b => { bin += String.fromCharCode(b); });
+        return btoa(bin);
+    }
 
-    setTimeout(() => {
-        toast.style.animation = 'slideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
+    $('#publishBtn').addEventListener('click', async () => {
+        const c = ghCfg();
+        const st = $('#ghStatus');
+        if (!c.token || !c.owner || !c.repo) {
+            toast('اول تب گیت‌هاب را تنظیم کن', 'error');
+            $$('.admin-tab').forEach(t => t.classList.remove('active'));
+            $$('.pane').forEach(p => p.classList.remove('active'));
+            document.querySelector('[data-pane="github"]').classList.add('active');
+            $('#pane-github').classList.add('active');
+            return;
+        }
+
+        const btn = $('#publishBtn');
+        btn.disabled = true;
+        btn.textContent = 'در حال انتشار…';
+        const path = 'data/store.json';
+        const api = `https://api.github.com/repos/${c.owner}/${c.repo}/contents/${path}`;
+
+        try {
+            // current sha (needed to update an existing file)
+            let sha;
+            const cur = await fetch(`${api}?ref=${encodeURIComponent(c.branch)}`, { headers: ghHeaders(c.token) });
+            if (cur.ok) sha = (await cur.json()).sha;
+
+            const body = {
+                message: 'admin: update store.json',
+                content: b64(JSON.stringify(data, null, 2) + '\n'),
+                branch: c.branch
+            };
+            if (sha) body.sha = sha;
+
+            const put = await fetch(api, { method: 'PUT', headers: ghHeaders(c.token), body: JSON.stringify(body) });
+
+            if (put.ok) {
+                toast('منتشر شد ✅ چند دقیقه تا آپدیت سایت صبر کن');
+                st.textContent = '✅ آخرین انتشار: ' + new Date().toLocaleString('fa-IR');
+            } else {
+                const err = await put.json().catch(() => ({}));
+                toast('انتشار ناموفق: ' + (err.message || put.status), 'error');
+                st.textContent = '❌ ' + (err.message || put.status);
+            }
+        } catch (e) {
+            toast('خطای شبکه هنگام انتشار', 'error');
+            st.textContent = '❌ خطای شبکه — شاید نیاز به VPN باشد.';
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'انتشار روی گیت‌هاب';
+        }
+    });
+
+    $('#dlJson').addEventListener('click', () => {
+        const blob = new Blob([JSON.stringify(data, null, 2) + '\n'], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'store.json';
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    });
+
+    /* ---------------- boot ---------------- */
+    async function boot() {
+        loadGhForm();
+        try {
+            await PIBO.loadStore();
+            data = {
+                settings: PIBO.store.settings || {},
+                products: PIBO.store.products || [],
+                faq:      PIBO.store.faq || []
+            };
+            data.settings.categories = data.settings.categories || [];
+        } catch (e) {
+            toast('store.json خوانده نشد — با داده‌ی خالی شروع می‌کنیم', 'error');
+            data = { settings: { categories: [] }, products: [], faq: [] };
+        }
+        renderAll();
+        renderSettings();
+    }
+})();
