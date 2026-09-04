@@ -8,8 +8,8 @@
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#FBF4E8",
-  "theme_color": "#E23D2E",
+  "background_color": "#FFF8E7",
+  "theme_color": "#FF3B30",
   "icons": [
     { "src": "https://api.iconify.design/noto/pizza.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ]
