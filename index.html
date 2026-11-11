@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#F26D20">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="assets/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="پیبو">
+<title>پیبو | پیتزای واقعی، تجربه سه‌بعدی</title>
+<meta name="description" content="پیبو — پیتزای دست‌پخت با امکان مشاهده سه‌بعدی و واقعیت افزوده پیش از سفارش. سفارش آنلاین و ارسال سریع.">
+<script>(function(){try{if(/Android/i.test(navigator.userAgent||""))document.documentElement.classList.add("is-android");}catch(e){}})();</script>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="preloader" class="preloader" aria-hidden="true">
+  <div class="preloader-logo-wrap">
+    <img class="preloader-logo" src="assets/images/preloader-logo.png" alt="پیبو">
+  </div>
+</div>
+<script>
+  // Hide the preloader once the page has fully loaded, but keep it
+  // on screen for a small minimum time so the logo animation is
+  // actually seen rather than flashing by instantly on a fast
+  // connection.
+  (function(){
+    var MIN_MS = 3800;
+    var start = performance.now();
+    function reveal(){
+      var el = document.getElementById("preloader");
+      if(!el) return;
+      var wait = Math.max(0, MIN_MS - (performance.now() - start));
+      setTimeout(function(){
+        el.classList.add("hide");
+        setTimeout(function(){ el.remove(); }, 650);
+      }, wait);
+    }
+    if(document.readyState === "complete") reveal();
+    else window.addEventListener("load", reveal);
+  })();
+</script>
+
+<header class="site-header">
+  <div class="container">
+    <a href="#" class="logo"><span class="mark site-logo-mark" id="site-logo-mark">پ</span> PIBO</a>
+    <nav class="nav-links">
+      <a href="#menu">منو</a>
+      <a href="#menu">واقعیت افزوده</a>
+      <a href="#faq">سوالات</a>
+      <a href="admin.html">پنل</a>
+    </nav>
+    <div class="nav-actions">
+      <a href="#faq" class="btn btn-outline">راهنما</a>
+      <button class="menu-toggle" aria-label="باز کردن منو"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+</header>
+
+<nav class="mobile-nav">
+  <div class="mobile-nav-top">
+    <span class="logo"><span class="mark site-logo-mark">پ</span> PIBO</span>
+    <button class="close-mn" aria-label="بستن منو">✕</button>
+  </div>
+  <a href="#menu"><span class="mn-ic">🍕</span> منو</a>
+  <a href="#menu"><span class="mn-ic">✦</span> واقعیت افزوده</a>
+  <a href="#faq"><span class="mn-ic">؟</span> سوالات</a>
+  <a href="admin.html"><span class="mn-ic">⚙</span> پنل</a>
+</nav>
+
+<!-- ================= HERO SLOGAN ================= -->
+<section class="hero-slogan">
+  <div class="container">
+    <h1>Italian Heart, Napolitan Soul</h1>
+  </div>
+</section>
+
+<!-- ================= MENU ================= -->
+<section class="section" id="menu" style="padding-top:24px">
+  <div class="container">
+    <div class="section-head reveal">
+      <p>هر پیتزا با علامت AR قابل مشاهده سه‌بعدی است — دکمه «مشاهده سه‌بعدی» را بزنید.</p>
+    </div>
+    <div class="menu-tabs" data-menu-tabs></div>
+    <div class="menu-sections" data-menu-grid></div>
+  </div>
+</section>
+
+<!-- ================= FAQ ================= -->
+<section class="section alt" id="faq">
+  <div class="container">
+    <div class="section-head reveal">
+      <span class="eyebrow">سوالات متداول</span>
+      <h2>هر چیزی که باید بدانید</h2>
+    </div>
+    <div class="faq-list reveal">
+      <details class="faq-item">
+        <summary>مشاهده سه‌بعدی روی چه گوشی‌هایی کار می‌کند؟</summary>
+        <p>روی آیفون (سافاری) با Quick Look و روی اندروید (کروم) با Scene Viewer به‌صورت خودکار باز می‌شود، بدون نیاز به نصب اپلیکیشن.</p>
+      </details>
+      <details class="faq-item">
+        <summary>آیا اندازه پیتزا در مدل سه‌بعدی واقعی است؟</summary>
+        <p>بله، مدل‌ها از اسکن واقعی پیتزا گرفته شده و با مقیاس قفل‌شده نمایش داده می‌شوند تا اندازه دقیق را ببینید.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <a href="#" class="logo" style="color:#fff;margin-bottom:14px"><span class="mark site-logo-mark">پ</span> PIBO</a>
+        <p style="color:#cbbfae;font-size:.9rem;line-height:1.9;max-width:280px">پیتزای دست‌پخت با تجربه مشاهده سه‌بعدی پیش از سفارش.</p>
+      </div>
+      <div>
+        <h4>دسترسی سریع</h4>
+        <ul>
+          <li><a href="#menu">منو</a></li>
+          <li><a href="#menu">واقعیت افزوده</a></li>
+          <li><a href="#faq">سوالات</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© پیبو — تمامی حقوق محفوظ است</span>
+      <span>ساخته‌شده با ❤ برای عاشقان پیتزا</span>
+    </div>
+  </div>
+</footer>
+
+<script src="js/ios-glass.js"></script>
+<script src="js/vendor/qrcode.js"></script>
+<script src="js/vendor/qrcode_utf8.js"></script>
+<script src="js/store.js"></script>
+<script src="js/products.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/main.js"></script>
+<script src="js/vpn-hint.js"></script>
+<script src="js/install-prompt.js"></script>
+<script>
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", () => {
+      navigator.serviceWorker.register("sw.js").catch(() => {});
+    });
+  }
+</script>
+</body>
+</html>
